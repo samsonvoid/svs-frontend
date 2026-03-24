@@ -8,18 +8,26 @@ import {
     ChevronDown, 
     LogOut,
     Menu,
-    X
+    X,
+    PackagePlus,
+    ClipboardList
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const [inventoryOpen, setInventoryOpen] = useState(false);
+    
+    const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
+    const isAdmin = user.role === 'Admin';
 
     const isActive = (path) => location.pathname === path;
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Manunuzi (Stock In)', path: '/purchases', icon: PackagePlus, adminOnly: true },
         { 
             name: 'Inventory / Items', 
             path: '/inventory', 
@@ -30,13 +38,29 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             submenu: [
                 { name: 'Stock List', path: '/inventory' },
                 { name: 'Categories', path: '/categories' },
-                { name: '+ Add New Item', path: '/inventory/add', isAction: true },
             ]
         },
-        { name: 'Sales Transactions', path: '/sales', icon: ShoppingCart },
-        { name: 'Business Reports', path: '/reports', icon: BarChart3 },
-        { name: 'Settings', path: '/settings', icon: Settings },
-    ];
+        { name: 'Mauzo (Sales)', path: '/sales', icon: ShoppingCart },
+        { name: 'Ripoti (Reports)', path: '/reports', icon: BarChart3, adminOnly: true },
+        { name: 'Audit Trail (Logs)', path: '/stock-logs', icon: ClipboardList, adminOnly: true },
+        { name: 'Settings', path: '/settings', icon: Settings, adminOnly: true },
+    ].filter(item => !item.adminOnly || isAdmin).map(item => {
+        if (item.submenu) {
+            item.submenu = item.submenu.filter(sub => !sub.adminOnly || isAdmin);
+        }
+        return item;
+    });
+
+    const handleLogout = async () => {
+        try {
+            await api.post('/logout');
+        } catch (e) {
+            console.error('Logout failed:', e);
+        }
+        localStorage.removeItem('svs_token');
+        localStorage.removeItem('svs_user');
+        navigate('/login');
+    };
 
     return (
         <>
@@ -141,12 +165,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </nav>
 
                 <div className="p-4 bg-gray-900/50 border-t border-gray-800 m-3 rounded-2xl flex items-center gap-3 mt-auto">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white shadow-lg">SV</div>
-                    <div className="overflow-hidden flex-1">
-                        <p className="text-xs font-bold text-white truncate">Samson (Root)</p>
-                        <p className="text-[10px] text-gray-500 truncate">Mabibo Terminal #01</p>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white shadow-lg">
+                        {user.name ? user.name.substring(0,2).toUpperCase() : 'SV'}
                     </div>
-                    <button className="text-gray-500 hover:text-red-400 transition-colors">
+                    <div className="overflow-hidden flex-1">
+                        <p className="text-xs font-bold text-white truncate">{user.name || 'User'}</p>
+                        <p className={`text-[10px] truncate ${isAdmin ? 'text-blue-400 font-bold uppercase' : 'text-gray-500'}`}>
+                            {user.role || 'Cashier'}
+                        </p>
+                    </div>
+                    <button onClick={handleLogout} className="text-gray-500 hover:text-red-400 transition-colors">
                         <LogOut className="w-4 h-4" />
                     </button>
                 </div>
