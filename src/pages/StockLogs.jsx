@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ClipboardList, Loader2, Search } from 'lucide-react';
 import api from '../api/axios';
+import Pagination from '../components/common/Pagination';
 
 const StockLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL'); // ALL | IN | OUT
+    const [search, setSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -18,6 +22,21 @@ const StockLogs = () => {
         };
         fetchLogs();
     }, [filter]);
+
+    const filteredLogs = useMemo(() => {
+        return logs.filter(log => {
+            const term = search.toLowerCase();
+            const name = log.product?.name?.toLowerCase() || '';
+            const sku = log.product?.sku?.toLowerCase() || '';
+            const ref = log.reference?.toLowerCase() || '';
+            return name.includes(term) || sku.includes(term) || ref.includes(term);
+        });
+    }, [logs, search]);
+
+    const paginatedLogs = useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        return filteredLogs.slice(start, start + pageSize);
+    }, [filteredLogs, currentPage, pageSize]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -40,13 +59,17 @@ const StockLogs = () => {
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-purple-600/20 rounded-full blur-[80px]" />
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Controls Bar: Filter Tabs & Search */}
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     {['ALL', 'IN', 'OUT'].map(f => (
                         <button 
                             key={f} 
-                            onClick={() => { setFilter(f); setLoading(true); }}
+                            onClick={() => { 
+                                setFilter(f); 
+                                setCurrentPage(1);
+                                setLoading(true); 
+                            }}
                             className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95 ${filter === f
                                 ? (f === 'IN' ? 'bg-green-600 text-white shadow-lg shadow-green-500/25'
                                     : f === 'OUT' ? 'bg-red-500 text-white shadow-lg shadow-red-500/25'
@@ -57,9 +80,20 @@ const StockLogs = () => {
                         </button>
                     ))}
                 </div>
-                <span className="text-xs text-gray-500 font-semibold px-2 py-1 bg-gray-100 rounded-lg">
-                    {logs.length} records
-                </span>
+
+                <div className="relative w-full lg:w-72">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input 
+                        value={search} 
+                        onChange={e => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }} 
+                        type="text" 
+                        placeholder="Search product or ref..."
+                        className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-xs" 
+                    />
+                </div>
             </div>
 
             {/* Logs Table */}
@@ -76,7 +110,7 @@ const StockLogs = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {logs.map(log => (
+                            {paginatedLogs.map(log => (
                                 <tr key={log.id} className="hover:bg-gray-50/60 transition-colors">
                                     <td className="px-6 sm:px-8 py-4 whitespace-nowrap">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider
@@ -102,7 +136,7 @@ const StockLogs = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {logs.length === 0 && (
+                            {filteredLogs.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="text-center py-16 text-gray-400 italic text-sm">
                                         No log entries found.
@@ -111,6 +145,18 @@ const StockLogs = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Pagination Footer */}
+                <div className="p-4 sm:p-6 bg-white">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredLogs.length}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        pageSizeOptions={[10, 20, 50]}
+                    />
                 </div>
             </div>
         </div>

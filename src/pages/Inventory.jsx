@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter } from 'lucide-react';
 import api from '../api/axios';
+import Pagination from '../components/common/Pagination';
 
 const Inventory = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [showModal, setShowModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -77,10 +81,23 @@ const Inventory = () => {
         }
     };
 
-    const filtered = products.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase())
-    );
+    const lowStockCount = useMemo(() => {
+        return products.filter(p => p.stock_quantity <= (p.min_stock ?? 5)).length;
+    }, [products]);
+
+    const filtered = useMemo(() => {
+        return products.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+                p.sku.toLowerCase().includes(search.toLowerCase());
+            const matchesLowStock = filterLowStockOnly ? (p.stock_quantity <= (p.min_stock ?? 5)) : true;
+            return matchesSearch && matchesLowStock;
+        });
+    }, [products, search, filterLowStockOnly]);
+
+    const paginatedProducts = useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
+    }, [filtered, currentPage, pageSize]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -120,16 +137,54 @@ const Inventory = () => {
                 </div>
             )}
 
-            {/* Search */}
-            <div className="relative w-full max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                    value={search} 
-                    onChange={e => setSearch(e.target.value)} 
-                    type="text" 
-                    placeholder="Search by name or SKU..."
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl sm:rounded-2xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-xs" 
-                />
+            {/* Search & BI Filter Pills */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="relative w-full max-w-md">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input 
+                        value={search} 
+                        onChange={e => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }} 
+                        type="text" 
+                        placeholder="Search by name or SKU..."
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl sm:rounded-2xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-xs" 
+                    />
+                </div>
+
+                {/* BI Quick Filter Toggle */}
+                <div className="flex items-center gap-2 bg-white p-1 rounded-xl sm:rounded-2xl border border-gray-100 shadow-xs">
+                    <button
+                        onClick={() => {
+                            setFilterLowStockOnly(false);
+                            setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            !filterLowStockOnly
+                                ? 'bg-blue-600 text-white shadow-xs'
+                                : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                    >
+                        All ({products.length})
+                    </button>
+                    <button
+                        onClick={() => {
+                            setFilterLowStockOnly(true);
+                            setCurrentPage(1);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            filterLowStockOnly
+                                ? 'bg-red-600 text-white shadow-xs'
+                                : lowStockCount > 0
+                                ? 'text-red-600 hover:bg-red-50'
+                                : 'text-gray-400 hover:text-gray-700'
+                        }`}
+                    >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Low Stock ({lowStockCount})
+                    </button>
+                </div>
             </div>
 
             {/* Table */}
@@ -147,7 +202,7 @@ const Inventory = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filtered.map(p => {
+                            {paginatedProducts.map(p => {
                                 const isLow = p.stock_quantity <= (p.min_stock ?? 5);
                                 return (
                                     <tr key={p.id} className="hover:bg-gray-50/60 transition-colors group">
@@ -202,6 +257,18 @@ const Inventory = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Pagination Footer */}
+                <div className="p-4 sm:p-6 bg-white">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filtered.length}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        pageSizeOptions={[10, 20, 50]}
+                    />
                 </div>
             </div>
 

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, Trash2, Receipt, Search, Loader2, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../api/axios';
+import Pagination from '../components/common/Pagination';
 
 const API_BASE = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
 const downloadFile = (path) => {
@@ -15,6 +16,9 @@ const downloadFile = (path) => {
 const Sales = () => {
     const [products, setProducts] = useState([]);
     const [salesHistory, setSalesHistory] = useState([]);
+    const [salesSearch, setSalesSearch] = useState('');
+    const [salesPage, setSalesPage] = useState(1);
+    const [salesPageSize, setSalesPageSize] = useState(6);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
@@ -73,6 +77,19 @@ const Sales = () => {
             setSubmitting(false);
         }
     };
+
+    const filteredSales = useMemo(() => {
+        return salesHistory.filter(sale => {
+            const term = salesSearch.toLowerCase();
+            const id = sale.id?.toLowerCase() || '';
+            return id.includes(term);
+        });
+    }, [salesHistory, salesSearch]);
+
+    const paginatedSales = useMemo(() => {
+        const start = (salesPage - 1) * salesPageSize;
+        return filteredSales.slice(start, start + salesPageSize);
+    }, [filteredSales, salesPage, salesPageSize]);
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -198,46 +215,74 @@ const Sales = () => {
                 </div>
 
                 {/* Sales History */}
-                <div className="lg:col-span-3 bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                            <Receipt className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Mauzo</h3>
-                            <p className="text-xs text-gray-500">Recent sales transactions</p>
-                        </div>
-                    </div>
-                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[520px] pr-1">
-                        {salesHistory.length === 0 && (
-                            <div className="text-center py-16 text-gray-400 italic text-sm">No sales yet.</div>
-                        )}
-                        {salesHistory.map((sale) => (
-                            <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl sm:rounded-2xl bg-gray-50 hover:bg-green-50/50 transition-colors">
-                                <div className="flex items-center gap-3.5 min-w-0">
-                                    <div className="w-9 h-9 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-xs font-black shrink-0">
-                                        OUT
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 truncate">Sale #{sale.id.slice(0, 8).toUpperCase()}</p>
-                                        <p className="text-xs text-gray-400">{new Date(sale.created_at).toLocaleString()}</p>
-                                    </div>
+                <div className="lg:col-span-3 bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                                    <Receipt className="w-5 h-5" />
                                 </div>
-                                <div className="text-left sm:text-right shrink-0 flex items-center justify-between sm:justify-end gap-4 pl-12 sm:pl-0">
-                                    <div>
-                                        <p className="text-sm font-black text-green-700">TZS {parseFloat(sale.total_amount).toLocaleString()}</p>
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold">{(sale.sale_items?.length ?? 0)} items</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => downloadFile(`/export/receipt/${sale.id}`)} 
-                                        title="Download Receipt"
-                                        className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 active:scale-95 rounded-xl transition-all border border-gray-200 sm:border-transparent"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                    </button>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Mauzo</h3>
+                                    <p className="text-xs text-gray-500">Recent sales transactions</p>
                                 </div>
                             </div>
-                        ))}
+                            <div className="relative w-full sm:w-48">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search sale ID..."
+                                    value={salesSearch}
+                                    onChange={(e) => {
+                                        setSalesSearch(e.target.value);
+                                        setSalesPage(1);
+                                    }}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            {filteredSales.length === 0 && (
+                                <div className="text-center py-16 text-gray-400 italic text-sm">No sales found.</div>
+                            )}
+                            {paginatedSales.map((sale) => (
+                                <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl sm:rounded-2xl bg-gray-50 hover:bg-green-50/50 transition-colors">
+                                    <div className="flex items-center gap-3.5 min-w-0">
+                                        <div className="w-9 h-9 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-xs font-black shrink-0">
+                                            OUT
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate">Sale #{sale.id.slice(0, 8).toUpperCase()}</p>
+                                            <p className="text-xs text-gray-400">{new Date(sale.created_at).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-left sm:text-right shrink-0 flex items-center justify-between sm:justify-end gap-4 pl-12 sm:pl-0">
+                                        <div>
+                                            <p className="text-sm font-black text-green-700">TZS {parseFloat(sale.total_amount).toLocaleString()}</p>
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold">{(sale.sale_items?.length ?? 0)} items</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => downloadFile(`/export/receipt/${sale.id}`)} 
+                                            title="Download Receipt"
+                                            className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 active:scale-95 rounded-xl transition-all border border-gray-200 sm:border-transparent"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-4">
+                        <Pagination
+                            currentPage={salesPage}
+                            totalItems={filteredSales.length}
+                            pageSize={salesPageSize}
+                            onPageChange={setSalesPage}
+                            onPageSizeChange={setSalesPageSize}
+                            pageSizeOptions={[5, 10, 20]}
+                        />
                     </div>
                 </div>
             </div>
