@@ -23,7 +23,11 @@ const Login = ({ onLogin }) => {
         setLoading(true);
         setError('');
         try {
-            const res = await api.post('/login', form);
+            const cleanForm = {
+                email: form.email.trim().toLowerCase(),
+                password: form.password,
+            };
+            const res = await api.post('/login', cleanForm);
             const { token, user } = res.data;
             localStorage.setItem('svs_token', token);
             localStorage.setItem('svs_user', JSON.stringify(user));
@@ -32,10 +36,19 @@ const Login = ({ onLogin }) => {
             onLogin && onLogin(user);
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed. Check your credentials.');
+            if (err.message === 'Network Error') {
+                setError('Cannot reach backend server. Check your internet connection or backend API URL.');
+            } else {
+                setError(err.response?.data?.message || 'Login failed. Check your email and password.');
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    const fillDemo = (email, password) => {
+        setForm({ email, password });
+        setError('');
     };
 
     return (
@@ -66,11 +79,14 @@ const Login = ({ onLogin }) => {
                         <div>
                             <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
                             <input
-                                type="email"
+                                type="text"
                                 value={form.email}
                                 onChange={e => setForm({ ...form, email: e.target.value })}
                                 required
-                                placeholder="admin@svoidstock.com"
+                                placeholder="admin@svs.com"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 text-white placeholder-gray-600 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                             />
                         </div>
@@ -83,6 +99,9 @@ const Login = ({ onLogin }) => {
                                     onChange={e => setForm({ ...form, password: e.target.value })}
                                     required
                                     placeholder="••••••••"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
+                                    spellCheck={false}
                                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 pr-12 text-white placeholder-gray-600 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                                 />
                                 <button type="button" onClick={() => setShowPass(!showPass)}
@@ -93,11 +112,34 @@ const Login = ({ onLogin }) => {
                         </div>
 
                         <button type="submit" disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 mt-2">
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 mt-2 active:scale-98">
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-5 h-5" />}
                             {loading ? 'Signing in...' : 'Sign In to SVS'}
                         </button>
                     </form>
+
+                    {/* Quick Demo Fill Buttons */}
+                    <div className="mt-6 pt-5 border-t border-white/10">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center mb-3">
+                            Quick Demo Sign-In
+                        </p>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => fillDemo('admin@svs.com', 'password')}
+                                className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-all text-center"
+                            >
+                                👑 Admin
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => fillDemo('cashier@svs.com', 'password')}
+                                className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-green-400 hover:text-green-300 transition-all text-center"
+                            >
+                                💼 Cashier
+                            </button>
+                        </div>
+                    </div>
 
                     <p className="text-center text-gray-600 text-xs mt-8">
                         S.Void Stock — Inventory Intelligence System v1.0

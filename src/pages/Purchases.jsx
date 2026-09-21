@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag, Search } from 'lucide-react';
 import api from '../api/axios';
+import Pagination from '../components/common/Pagination';
 
 const Purchases = () => {
     const [products, setProducts] = useState([]);
     const [history, setHistory] = useState([]);
+    const [purchaseSearch, setPurchaseSearch] = useState('');
+    const [purchasePage, setPurchasePage] = useState(1);
+    const [purchasePageSize, setPurchasePageSize] = useState(6);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
@@ -68,6 +72,21 @@ const Purchases = () => {
             setTimeout(() => setToast(null), 5000);
         }
     };
+
+    const filteredHistory = useMemo(() => {
+        return history.filter(item => {
+            const term = purchaseSearch.toLowerCase();
+            const name = item.product?.name?.toLowerCase() || '';
+            const sku = item.product?.sku?.toLowerCase() || '';
+            const sup = item.supplier_name?.toLowerCase() || '';
+            return name.includes(term) || sku.includes(term) || sup.includes(term);
+        });
+    }, [history, purchaseSearch]);
+
+    const paginatedHistory = useMemo(() => {
+        const start = (purchasePage - 1) * purchasePageSize;
+        return filteredHistory.slice(start, start + purchasePageSize);
+    }, [filteredHistory, purchasePage, purchasePageSize]);
 
     if (loading) {
         return (
@@ -188,40 +207,69 @@ const Purchases = () => {
                 </div>
 
                 {/* History Table */}
-                <div className="lg:col-span-3 bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col">
-                    <div className="flex items-center gap-3 mb-6 sm:mb-8">
-                        <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
-                            <ShoppingBag className="w-5 h-5" />
+                <div className="lg:col-span-3 bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                                    <ShoppingBag className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Manunuzi</h3>
+                                    <p className="text-xs text-gray-500">Rekodi ya mwisho ya Stock In</p>
+                                </div>
+                            </div>
+
+                            <div className="relative w-full sm:w-48">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search product / supplier..."
+                                    value={purchaseSearch}
+                                    onChange={(e) => {
+                                        setPurchaseSearch(e.target.value);
+                                        setPurchasePage(1);
+                                    }}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Manunuzi</h3>
-                            <p className="text-xs text-gray-500">Rekodi ya mwisho ya Stock In</p>
+
+                        <div className="space-y-3">
+                            {filteredHistory.length === 0 && (
+                                <div className="text-center py-16 text-gray-400 italic text-sm">
+                                    Hakuna rekodi ya manunuzi bado.
+                                </div>
+                            )}
+                            {paginatedHistory.map((item) => (
+                                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl sm:rounded-2xl bg-gray-50 hover:bg-blue-50/60 transition-colors group">
+                                    <div className="flex items-center gap-3.5 min-w-0">
+                                        <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                            IN
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 uppercase tracking-tight truncate">{item.product?.name}</p>
+                                            <p className="text-xs text-gray-400 truncate font-medium">{item.supplier_name || 'Direct Supplier'} · <span className="font-mono">{item.product?.sku}</span></p>
+                                        </div>
+                                    </div>
+                                    <div className="text-left sm:text-right shrink-0 pl-12 sm:pl-0">
+                                        <p className="text-sm font-black text-blue-600">+{item.quantity} units</p>
+                                        <p className="text-xs text-gray-400 font-semibold">TZS {parseFloat(item.purchase_price).toLocaleString()}/unit</p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-                        {history.length === 0 && (
-                            <div className="text-center py-16 text-gray-400 italic text-sm">
-                                Hakuna rekodi ya manunuzi bado.
-                            </div>
-                        )}
-                        {history.map((item) => (
-                            <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl sm:rounded-2xl bg-gray-50 hover:bg-blue-50/60 transition-colors group">
-                                <div className="flex items-center gap-3.5 min-w-0">
-                                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                        IN
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight truncate">{item.product?.name}</p>
-                                        <p className="text-xs text-gray-400 truncate font-medium">{item.supplier_name || 'Direct Supplier'} · <span className="font-mono">{item.product?.sku}</span></p>
-                                    </div>
-                                </div>
-                                <div className="text-left sm:text-right shrink-0 pl-12 sm:pl-0">
-                                    <p className="text-sm font-black text-blue-600">+{item.quantity} units</p>
-                                    <p className="text-xs text-gray-400 font-semibold">TZS {parseFloat(item.purchase_price).toLocaleString()}/unit</p>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="mt-4">
+                        <Pagination
+                            currentPage={purchasePage}
+                            totalItems={filteredHistory.length}
+                            pageSize={purchasePageSize}
+                            onPageChange={setPurchasePage}
+                            onPageSizeChange={setPurchasePageSize}
+                            pageSizeOptions={[6, 10, 20]}
+                        />
                     </div>
                 </div>
             </div>
