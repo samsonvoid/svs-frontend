@@ -35,13 +35,21 @@ function App() {
       </div>
   );
 
+  const requireAuth = ({ children }) => {
+    const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
+    if (!user || !user.id) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
+
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
         
         {/* Main App Routes */}
-        <Route path="/" element={<Layout><Dashboard /></Layout>} />
+        <Route path="/" element={<Layout><requireAuth><Dashboard /></requireAuth></Layout>} />
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/sales" element={<Layout><Sales /></Layout>} />
         
