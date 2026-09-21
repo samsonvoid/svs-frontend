@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Lock, Eye, EyeOff } from 'lucide-react';
 import api from '../api/axios';
@@ -9,6 +9,14 @@ const Login = ({ onLogin }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPass, setShowPass] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('svs_token');
+        const user = localStorage.getItem('svs_user');
+        if (token && user) {
+            navigate('/', { replace: true });
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,18 +39,18 @@ const Login = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] flex items-center justify-center p-4 sm:p-6">
             {/* Ambient glow */}
             <div className="absolute w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] top-1/4 left-1/4 pointer-events-none" />
             <div className="absolute w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] bottom-1/4 right-1/4 pointer-events-none" />
 
             <div className="relative w-full max-w-md">
                 {/* Glass Card */}
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl">
                     {/* Logo / Brand */}
-                    <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/30">
-                            <Lock className="w-8 h-8 text-white" />
+                    <div className="text-center mb-8 sm:mb-10">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/30">
+                            <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-tight">S.Void Stock</h1>
                         <p className="text-gray-400 text-sm mt-1">Inventory Intelligence System</p>

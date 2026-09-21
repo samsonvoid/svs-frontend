@@ -12,6 +12,14 @@ import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import Reports from './pages/Reports';
 
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('svs_token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
   if (user.role !== 'Admin') {
@@ -22,43 +30,42 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Basic layout wrapper for auth'd routes
-  const Layout = ({ children }) => (
-      <div className="bg-[#F3F4F6] h-screen flex overflow-hidden font-sans">
-        <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <div className="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300">
-          <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-1 overflow-hidden flex flex-col">
-            {children}
-          </main>
-        </div>
-      </div>
-  );
 
-  const requireAuth = ({ children }) => {
-    const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
-    if (!user || !user.id) {
-      return <Navigate to="/login" replace />;
-    }
-    return children;
-  };
+  const Layout = ({ children }) => (
+    <div className="bg-[#F3F4F6] h-screen w-full flex overflow-hidden font-sans">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        closeSidebar={() => setSidebarOpen(false)}
+      />
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
         
-        {/* Main App Routes */}
-        <Route path="/" element={<Layout><requireAuth><Dashboard /></requireAuth></Layout>} />
-        <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
-        <Route path="/sales" element={<Layout><Sales /></Layout>} />
+        {/* Protected App Routes */}
+        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
         
         {/* Admin Only Routes */}
-        <Route path="/purchases" element={<AdminRoute><Layout><Purchases /></Layout></AdminRoute>} />
-        <Route path="/stock-logs" element={<AdminRoute><Layout><StockLogs /></Layout></AdminRoute>} />
-        <Route path="/categories" element={<AdminRoute><Layout><Categories /></Layout></AdminRoute>} />
-        <Route path="/settings" element={<AdminRoute><Layout><Settings /></Layout></AdminRoute>} />
-        <Route path="/reports" element={<AdminRoute><Layout><Reports /></Layout></AdminRoute>} />
+        <Route path="/purchases" element={<ProtectedRoute><AdminRoute><Layout><Purchases /></Layout></AdminRoute></ProtectedRoute>} />
+        <Route path="/stock-logs" element={<ProtectedRoute><AdminRoute><Layout><StockLogs /></Layout></AdminRoute></ProtectedRoute>} />
+        <Route path="/categories" element={<ProtectedRoute><AdminRoute><Layout><Categories /></Layout></AdminRoute></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><AdminRoute><Layout><Settings /></Layout></AdminRoute></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><AdminRoute><Layout><Reports /></Layout></AdminRoute></ProtectedRoute>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
