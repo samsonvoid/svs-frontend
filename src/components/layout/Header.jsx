@@ -7,6 +7,10 @@ const PAGE_META = {
         title: 'Dashboard Overview',
         subtitle: 'Muhtasari wa Biashara & Takwimu',
     },
+    '/alerts': {
+        title: 'Tahadhari za Stoo (Alerts Hub)',
+        subtitle: 'Kituo cha Bidhaa Zilizokwisha & Zinazohitaji Agizo',
+    },
     '/inventory': {
         title: 'Inventory / Bidhaa',
         subtitle: 'Usimamizi wa Stock & Orodha ya Bidhaa',
@@ -14,6 +18,10 @@ const PAGE_META = {
     '/purchases': {
         title: 'Manunuzi (Stock In)',
         subtitle: 'Kupokea Mzigo Mpya Kutoka Suppliers',
+    },
+    '/suppliers': {
+        title: 'Wasambazaji (Suppliers)',
+        subtitle: 'Usimamizi wa Wasambazaji & Mawasiliano',
     },
     '/sales': {
         title: 'Mauzo (Sales)',
@@ -51,8 +59,18 @@ const Header = ({ toggleSidebar }) => {
         year: 'numeric'
     });
 
-    const userName = user.name || 'User';
-    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=2563EB&color=fff&bold=true`;
+    // Clean user name (e.g. remove "(Admin)" if appended to name to avoid redundant badge and ugly initials)
+    const rawName = user.name || 'User';
+    const displayName = rawName.replace(/\s*\([^)]*\)/g, '').trim() || rawName;
+
+    // Generate clean 1-2 letter initials (e.g. "Samson" -> "S", "Samson Void" -> "SV")
+    const initials = displayName
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(w => w[0]?.toUpperCase())
+        .filter(c => /[A-Z0-9]/i.test(c))
+        .slice(0, 2)
+        .join('') || 'U';
 
     return (
         <header className="h-16 lg:h-20 bg-white border-b border-gray-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
@@ -85,18 +103,19 @@ const Header = ({ toggleSidebar }) => {
                 <div className="flex items-center gap-3 pl-2 sm:pl-3 sm:border-l border-gray-200">
                     <div className="hidden sm:block text-right">
                         <p className="text-xs font-bold text-gray-900 leading-tight truncate max-w-[130px]">
-                            {userName}
+                            {displayName}
                         </p>
-                        <span className="inline-block text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                            {user.role || 'User'}
+                        <span className="inline-block text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-wider mt-0.5">
+                            {user.role || 'Admin'}
                         </span>
                     </div>
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 border-white shadow-sm ring-1 ring-gray-200 overflow-hidden shrink-0 bg-blue-600">
-                        <img 
-                            src={avatarUrl} 
-                            alt={userName}
-                            className="w-full h-full object-cover" 
-                        />
+
+                    {/* Clean native avatar badge */}
+                    <div 
+                        title={`${displayName} (${user.role || 'User'})`}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-sm ring-2 ring-blue-500/20 shrink-0 select-none cursor-default"
+                    >
+                        {initials}
                     </div>
                 </div>
             </div>
