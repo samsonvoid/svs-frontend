@@ -10,7 +10,8 @@ import {
     Menu,
     X,
     PackagePlus,
-    ClipboardList
+    ClipboardList,
+    Truck
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -40,6 +41,7 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Manunuzi (Stock In)', path: '/purchases', icon: PackagePlus, adminOnly: true },
+        { name: 'Wasambazaji (Suppliers)', path: '/suppliers', icon: Truck, adminOnly: true },
         { 
             name: 'Inventory / Items', 
             path: '/inventory', 

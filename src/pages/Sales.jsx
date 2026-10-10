@@ -150,7 +150,7 @@ const Sales = () => {
                                                     <option value="">-- Chagua Bidhaa --</option>
                                                     {products.map(p => (
                                                         <option key={p.id} value={p.id}>
-                                                            {p.name} (Stk: {p.stock_quantity})
+                                                            {p.name} (Stk: {p.stock_quantity} {p.unit || 'Pcs'})
                                                         </option>
                                                     ))}
                                                 </select>

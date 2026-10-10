@@ -5,6 +5,7 @@ import Pagination from '../components/common/Pagination';
 
 const Purchases = () => {
     const [products, setProducts] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
     const [history, setHistory] = useState([]);
     const [purchaseSearch, setPurchaseSearch] = useState('');
     const [purchasePage, setPurchasePage] = useState(1);
@@ -17,18 +18,21 @@ const Purchases = () => {
         product_id: '',
         quantity: '',
         purchase_price: '',
+        supplier_id: '',
         supplier_name: '',
     });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [prodRes, historyRes] = await Promise.all([
+                const [prodRes, historyRes, supRes] = await Promise.all([
                     api.get('/products'),
                     api.get('/purchases'),
+                    api.get('/suppliers'),
                 ]);
                 setProducts(prodRes.data.data || prodRes.data || []);
                 setHistory(historyRes.data || []);
+                setSuppliers(supRes.data.data || supRes.data || []);
             } catch (e) {
                 console.error('Failed to load purchase data', e);
             } finally {
@@ -55,7 +59,7 @@ const Purchases = () => {
             });
 
             setToast({ type: 'success', message: `✅ ${res.data.message} New stock: ${res.data.new_stock_level}` });
-            setForm({ product_id: '', quantity: '', purchase_price: '', supplier_name: '' });
+            setForm({ product_id: '', quantity: '', purchase_price: '', supplier_id: '', supplier_name: '' });
 
             // Refresh history and product list
             const [prodRes, historyRes] = await Promise.all([
@@ -146,7 +150,7 @@ const Purchases = () => {
                                 >
                                     <option value="">-- Chagua Bidhaa --</option>
                                     {products.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                                        <option key={p.id} value={p.id}>{p.name} ({p.sku}) · {p.unit || 'Pcs'}</option>
                                     ))}
                                 </select>
                             </div>
@@ -183,15 +187,33 @@ const Purchases = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Jina la Supplier (Optional)</label>
-                                <input
-                                    type="text"
-                                    name="supplier_name"
-                                    value={form.supplier_name}
-                                    onChange={handleChange}
-                                    placeholder="e.g. Bakhresa Food Products"
+                                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Supplier (Msambazaji)</label>
+                                <select
+                                    name="supplier_id"
+                                    value={form.supplier_id}
+                                    onChange={e => {
+                                        const id = e.target.value;
+                                        const sup = suppliers.find(s => s.id === id);
+                                        setForm({ ...form, supplier_id: id, supplier_name: sup ? sup.name : (id === '__other__' ? '' : '') });
+                                    }}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 sm:py-3 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                />
+                                >
+                                    <option value="">-- Chagua Supplier --</option>
+                                    {suppliers.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name}{s.contact_person ? ` (${s.contact_person})` : ''}</option>
+                                    ))}
+                                    <option value="__other__">➕ Ingiza Jina Lingine...</option>
+                                </select>
+                                {form.supplier_id === '__other__' && (
+                                    <input
+                                        type="text"
+                                        name="supplier_name"
+                                        value={form.supplier_name}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Kariakoo Supplier"
+                                        className="w-full mt-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                )}
                             </div>
 
                             <button
@@ -253,8 +275,8 @@ const Purchases = () => {
                                         </div>
                                     </div>
                                     <div className="text-left sm:text-right shrink-0 pl-12 sm:pl-0">
-                                        <p className="text-sm font-black text-blue-600">+{item.quantity} units</p>
-                                        <p className="text-xs text-gray-400 font-semibold">TZS {parseFloat(item.purchase_price).toLocaleString()}/unit</p>
+                                        <p className="text-sm font-black text-blue-600">+{item.quantity} {item.product?.unit || 'Pcs'}</p>
+                                        <p className="text-xs text-gray-400 font-semibold">TZS {parseFloat(item.purchase_price).toLocaleString()}/{item.product?.unit || 'unit'}</p>
                                     </div>
                                 </div>
                             ))}

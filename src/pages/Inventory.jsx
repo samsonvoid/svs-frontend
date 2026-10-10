@@ -16,7 +16,7 @@ const Inventory = () => {
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
 
-    const emptyForm = { name: '', sku: '', category_id: '', buying_price: '', selling_price: '', stock_quantity: '', min_stock: '5' };
+    const emptyForm = { name: '', sku: '', category_id: '', buying_price: '', selling_price: '', stock_quantity: '', unit: 'Pcs', min_stock: '5' };
     const [form, setForm] = useState(emptyForm);
 
     const showToast = (type, message) => {
@@ -44,7 +44,7 @@ const Inventory = () => {
         setForm({
             name: p.name, sku: p.sku, category_id: p.category_id,
             buying_price: p.buying_price, selling_price: p.selling_price,
-            stock_quantity: p.stock_quantity, min_stock: p.min_stock ?? 5,
+            stock_quantity: p.stock_quantity, unit: p.unit || 'Pcs', min_stock: p.min_stock ?? 5,
         });
         setShowModal(true);
     };
@@ -216,10 +216,15 @@ const Inventory = () => {
                                             </span>
                                         </td>
                                         <td className="px-4 py-4 text-right whitespace-nowrap">
-                                            <span className={`text-sm font-black ${isLow ? 'text-red-600' : 'text-gray-900'}`}>
-                                                {p.stock_quantity}
-                                                {isLow && <AlertTriangle className="w-3.5 h-3.5 inline ml-1 text-red-500" />}
-                                            </span>
+                                            <div className="inline-flex items-center gap-1.5 justify-end">
+                                                <span className={`text-sm font-black ${isLow ? 'text-red-600' : 'text-gray-900'}`}>
+                                                    {p.stock_quantity}
+                                                </span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                                    {p.unit || 'Pcs'}
+                                                </span>
+                                                {isLow && <AlertTriangle className="w-3.5 h-3.5 inline text-red-500 shrink-0" />}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 text-right text-sm text-gray-600 font-semibold whitespace-nowrap">
                                             TZS {parseFloat(p.buying_price).toLocaleString()}
@@ -348,7 +353,25 @@ const Inventory = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Unit (Kipimo)</label>
+                                    <select 
+                                        value={form.unit || 'Pcs'} 
+                                        onChange={e => setForm({...form, unit: e.target.value})} 
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    >
+                                        <option value="Pcs">Pcs (Vipande)</option>
+                                        <option value="Roll">Roll (Roli)</option>
+                                        <option value="Meter">Meter (Mita)</option>
+                                        <option value="Box">Box (Boksi)</option>
+                                        <option value="Pack">Pack (Pakiti)</option>
+                                        <option value="Set">Set (Seti)</option>
+                                        <option value="Pair">Pair (Jozi)</option>
+                                        <option value="Bag">Bag (Mfuko)</option>
+                                        <option value="Kg">Kg (Kilo)</option>
+                                    </select>
+                                </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Stock Quantity</label>
                                     <input 

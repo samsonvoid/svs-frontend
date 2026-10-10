@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import Reports from './pages/Reports';
+import Suppliers from './pages/Suppliers';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('svs_token');
@@ -59,6 +60,7 @@ function App() {
         
         {/* Admin Only Routes */}
         <Route path="/purchases" element={<ProtectedRoute><AdminRoute><Layout><Purchases /></Layout></AdminRoute></ProtectedRoute>} />
+        <Route path="/suppliers" element={<ProtectedRoute><AdminRoute><Layout><Suppliers /></Layout></AdminRoute></ProtectedRoute>} />
         <Route path="/stock-logs" element={<ProtectedRoute><AdminRoute><Layout><StockLogs /></Layout></AdminRoute></ProtectedRoute>} />
         <Route path="/categories" element={<ProtectedRoute><AdminRoute><Layout><Categories /></Layout></AdminRoute></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><AdminRoute><Layout><Settings /></Layout></AdminRoute></ProtectedRoute>} />
