@@ -8,6 +8,7 @@ const Purchases = () => {
     const [suppliers, setSuppliers] = useState([]);
     const [history, setHistory] = useState([]);
     const [purchaseSearch, setPurchaseSearch] = useState('');
+    const [filterSupplier, setFilterSupplier] = useState(''); // '' = All
     const [purchasePage, setPurchasePage] = useState(1);
     const [purchasePageSize, setPurchasePageSize] = useState(6);
     const [loading, setLoading] = useState(true);
@@ -83,9 +84,24 @@ const Purchases = () => {
             const name = item.product?.name?.toLowerCase() || '';
             const sku = item.product?.sku?.toLowerCase() || '';
             const sup = item.supplier_name?.toLowerCase() || '';
-            return name.includes(term) || sku.includes(term) || sup.includes(term);
+            const matchesSearch = !term || name.includes(term) || sku.includes(term) || sup.includes(term);
+            const matchesSupplier = !filterSupplier || item.supplier_name === filterSupplier;
+            return matchesSearch && matchesSupplier;
         });
-    }, [history, purchaseSearch]);
+    }, [history, purchaseSearch, filterSupplier]);
+
+    // Totals for the current filtered view
+    const filteredSummary = useMemo(() => {
+        const totalQty = filteredHistory.reduce((s, i) => s + parseInt(i.quantity ?? 0), 0);
+        const totalValue = filteredHistory.reduce((s, i) => s + parseFloat(i.purchase_price ?? 0) * parseInt(i.quantity ?? 0), 0);
+        return { totalQty, totalValue, count: filteredHistory.length };
+    }, [filteredHistory]);
+
+    // Unique supplier names present in history (for chips)
+    const historySuppliers = useMemo(() => {
+        const names = history.map(i => i.supplier_name).filter(Boolean);
+        return [...new Set(names)].sort();
+    }, [history]);
 
     const paginatedHistory = useMemo(() => {
         const start = (purchasePage - 1) * purchasePageSize;
@@ -231,29 +247,88 @@ const Purchases = () => {
                 {/* History Table */}
                 <div className="lg:col-span-3 bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
-                                    <ShoppingBag className="w-5 h-5" />
+                        {/* History Panel Header */}
+                        <div className="space-y-3 mb-5">
+                            {/* Title + Search */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                                        <ShoppingBag className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Manunuzi</h3>
+                                        <p className="text-xs text-gray-500">
+                                            {filterSupplier ? `Supplier: ${filterSupplier}` : 'Rekodi yote ya Stock In'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 text-base sm:text-lg">Historia ya Manunuzi</h3>
-                                    <p className="text-xs text-gray-500">Rekodi ya mwisho ya Stock In</p>
+
+                                <div className="relative w-full sm:w-48">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search product..."
+                                        value={purchaseSearch}
+                                        onChange={(e) => {
+                                            setPurchaseSearch(e.target.value);
+                                            setPurchasePage(1);
+                                        }}
+                                        className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
                                 </div>
                             </div>
 
-                            <div className="relative w-full sm:w-48">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search product / supplier..."
-                                    value={purchaseSearch}
-                                    onChange={(e) => {
-                                        setPurchaseSearch(e.target.value);
-                                        setPurchasePage(1);
-                                    }}
-                                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                            {/* Supplier Filter Chips */}
+                            {historySuppliers.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => { setFilterSupplier(''); setPurchasePage(1); }}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                                            !filterSupplier
+                                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                                        }`}
+                                    >
+                                        🏬 Wote ({history.length})
+                                    </button>
+                                    {historySuppliers.map(name => {
+                                        const count = history.filter(i => i.supplier_name === name).length;
+                                        const val = history
+                                            .filter(i => i.supplier_name === name)
+                                            .reduce((s, i) => s + parseFloat(i.purchase_price ?? 0) * parseInt(i.quantity ?? 0), 0);
+                                        return (
+                                            <button
+                                                key={name}
+                                                onClick={() => { setFilterSupplier(name); setPurchasePage(1); }}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                                                    filterSupplier === name
+                                                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                                        : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                                                }`}
+                                                title={`TZS ${val.toLocaleString()} total`}
+                                            >
+                                                🚚 {name} ({count})
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Summary bar for current filter */}
+                            <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-xs font-semibold text-blue-700">
+                                <span>📦 <span className="font-black">{filteredSummary.count}</span> deliveries</span>
+                                <span className="text-blue-300">|</span>
+                                <span>🔢 <span className="font-black">{filteredSummary.totalQty.toLocaleString()}</span> units received</span>
+                                <span className="text-blue-300">|</span>
+                                <span>💰 TZS <span className="font-black">{filteredSummary.totalValue.toLocaleString()}</span> total spent</span>
+                                {filterSupplier && (
+                                    <button
+                                        onClick={() => { setFilterSupplier(''); setPurchasePage(1); }}
+                                        className="ml-auto text-[10px] font-black text-blue-500 hover:text-red-500 transition-colors underline"
+                                    >
+                                        ✕ Clear Filter
+                                    </button>
+                                )}
                             </div>
                         </div>
 
