@@ -49,7 +49,7 @@ const Settings = () => {
         notify_email_enabled: '1',
         notify_email_address: storedUser.email || '',
         notify_whatsapp_enabled: '1',
-        notify_whatsapp_number: '',
+        notify_whatsapp_number: '255626638099',
         notify_sms_enabled: '0',
         notify_sms_number: '',
         // Triggers
