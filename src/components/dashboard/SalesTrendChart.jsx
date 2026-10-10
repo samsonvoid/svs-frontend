@@ -9,19 +9,38 @@ import {
     Area,
     Legend
 } from 'recharts';
+import { TrendingUp, AlertCircle } from 'lucide-react';
 
 const SalesTrendChart = ({ data }) => {
     if (!data || data.length === 0) {
         return (
-            <div className="h-[300px] w-full flex items-center justify-center text-gray-500 text-sm">
-                <div>No sales data for the past 7 days</div>
+            <div className="h-[300px] w-full flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
+                <AlertCircle className="w-8 h-8 text-gray-300" />
+                <p className="font-semibold">Hakuna taarifa za mauzo kwa siku 7 zilizopita</p>
             </div>
         );
     }
 
+    const totalActivity = data.reduce(
+        (sum, item) => sum + (Number(item.sales) || 0) + (Number(item.purchases) || 0),
+        0
+    );
+
     return (
-        <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[300px] w-full relative min-w-0">
+            {totalActivity === 0 && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-2xs rounded-2xl z-10 p-4 text-center">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2 shadow-xs">
+                        <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-900">Hakuna Miamala Siku 7 Zilizopita</p>
+                    <p className="text-xs text-gray-500 max-w-xs mt-1">
+                        Mauzo au manunuzi yakirekodiwa, mchoro huu utaonyesha mwenendo wa fedha mara moja.
+                    </p>
+                </div>
+            )}
+
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
                 <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 30 }}>
                     <defs>
                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -44,6 +63,7 @@ const SalesTrendChart = ({ data }) => {
                     <YAxis 
                         axisLine={false} 
                         tickLine={false} 
+                        domain={totalActivity > 0 ? [0, 'auto'] : [0, 50000]}
                         tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
                         tickFormatter={(value) => `TZS ${value >= 1000 ? (value/1000) + 'k' : value}`}
                     />
