@@ -11,7 +11,8 @@ import {
     X,
     PackagePlus,
     ClipboardList,
-    Truck
+    Truck,
+    Bell
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -25,6 +26,21 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
 
     const isInventoryPath = location.pathname === '/inventory' || location.pathname === '/categories';
     const [inventoryOpen, setInventoryOpen] = useState(isInventoryPath);
+    const [alertCount, setAlertCount] = useState(0);
+
+    useEffect(() => {
+        const fetchAlertCount = async () => {
+            try {
+                const res = await api.get('/analytics/low-stock');
+                setAlertCount(res.data?.length || 0);
+            } catch (e) {
+                // ignore
+            }
+        };
+        fetchAlertCount();
+        const interval = setInterval(fetchAlertCount, 60000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         if (isInventoryPath) {
@@ -40,6 +56,7 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Tahadhari (Alerts)', path: '/alerts', icon: Bell, badge: alertCount },
         { name: 'Manunuzi (Stock In)', path: '/purchases', icon: PackagePlus, adminOnly: true },
         { name: 'Wasambazaji (Suppliers)', path: '/suppliers', icon: Truck, adminOnly: true },
         { 
@@ -164,14 +181,21 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
                                             to={item.path}
                                             onClick={handleLinkClick}
                                             className={`
-                                                flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all
+                                                flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all
                                                 ${isActive(item.path) 
                                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25' 
                                                     : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'}
                                             `}
                                         >
-                                            <item.icon className="w-4 h-4" />
-                                            <span>{item.name}</span>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <item.icon className="w-4 h-4 shrink-0" />
+                                                <span className="truncate">{item.name}</span>
+                                            </div>
+                                            {item.badge > 0 && (
+                                                <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 shadow-xs animate-pulse">
+                                                    {item.badge}
+                                                </span>
+                                            )}
                                         </Link>
                                     )}
                                 </li>

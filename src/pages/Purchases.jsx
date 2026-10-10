@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag, Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
 
 const Purchases = () => {
+    const [searchParams] = useSearchParams();
+    const queryProductId = searchParams.get('product_id');
+
     const [products, setProducts] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
     const [history, setHistory] = useState([]);
@@ -31,9 +35,21 @@ const Purchases = () => {
                     api.get('/purchases'),
                     api.get('/suppliers'),
                 ]);
-                setProducts(prodRes.data.data || prodRes.data || []);
+                const prods = prodRes.data.data || prodRes.data || [];
+                setProducts(prods);
                 setHistory(historyRes.data || []);
                 setSuppliers(supRes.data.data || supRes.data || []);
+
+                if (queryProductId) {
+                    const matched = prods.find(p => p.id === queryProductId);
+                    if (matched) {
+                        setForm(prev => ({
+                            ...prev,
+                            product_id: matched.id,
+                            purchase_price: matched.buying_price || ''
+                        }));
+                    }
+                }
             } catch (e) {
                 console.error('Failed to load purchase data', e);
             } finally {
@@ -41,7 +57,7 @@ const Purchases = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [queryProductId]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });

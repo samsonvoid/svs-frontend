@@ -12,6 +12,7 @@ import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import Reports from './pages/Reports';
 import Suppliers from './pages/Suppliers';
+import Alerts from './pages/Alerts';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('svs_token');
@@ -55,6 +56,7 @@ function App() {
         
         {/* Protected App Routes */}
         <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/alerts" element={<ProtectedRoute><Layout><Alerts /></Layout></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
         <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
         
