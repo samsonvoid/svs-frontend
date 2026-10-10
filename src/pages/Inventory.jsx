@@ -85,6 +85,44 @@ const Inventory = () => {
         return products.filter(p => p.stock_quantity <= (p.min_stock ?? 5)).length;
     }, [products]);
 
+    // ── ABC Analysis (Pareto) ────────────────────────────────────────────────
+    // Rank products by total revenue generated (selling_price × qty_sold)
+    // A = top items covering 80% of revenue, B = next 15%, C = bottom 5%
+    const abcMap = useMemo(() => {
+        const withRevenue = products.map(p => ({
+            id: p.id,
+            rev: parseFloat(p.selling_price) * parseInt(p.sale_items_sum_quantity ?? 0),
+        })).sort((a, b) => b.rev - a.rev);
+
+        const totalRev = withRevenue.reduce((s, x) => s + x.rev, 0);
+        const map = {};
+        let cumulative = 0;
+        for (const item of withRevenue) {
+            cumulative += item.rev;
+            const pct = totalRev > 0 ? cumulative / totalRev : 1;
+            map[item.id] = pct <= 0.80 ? 'A' : pct <= 0.95 ? 'B' : 'C';
+        }
+        return map;
+    }, [products]);
+
+    // ── Reorder Suggestions ──────────────────────────────────────────────────
+    // daily_rate = total_sold / 30 days (rolling estimate)
+    // days_left  = stock_quantity / daily_rate
+    // Flag products where days_left < 14 and they actually sell
+    const reorderAlerts = useMemo(() => {
+        return products
+            .map(p => {
+                const totalSold = parseInt(p.sale_items_sum_quantity ?? 0);
+                const dailyRate = totalSold / 30;
+                const daysLeft = dailyRate > 0 ? Math.floor(p.stock_quantity / dailyRate) : null;
+                return { ...p, dailyRate, daysLeft };
+            })
+            .filter(p => p.daysLeft !== null && p.daysLeft < 14)
+            .sort((a, b) => a.daysLeft - b.daysLeft);
+    }, [products]);
+
+    const [showReorderPanel, setShowReorderPanel] = useState(true);
+
     const filtered = useMemo(() => {
         return products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -98,6 +136,7 @@ const Inventory = () => {
         const start = (currentPage - 1) * pageSize;
         return filtered.slice(start, start + pageSize);
     }, [filtered, currentPage, pageSize]);
+
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -166,6 +205,52 @@ const Inventory = () => {
                 </select>
             </div>
 
+            {/* ── Reorder Suggestions Panel ─────────────────────────────── */}
+            {reorderAlerts.length > 0 && showReorderPanel && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+                                <AlertTriangle className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-amber-800">
+                                    Reorder Suggestions — {reorderAlerts.length} item{reorderAlerts.length > 1 ? 's' : ''} need restocking soon
+                                </p>
+                                <p className="text-[11px] text-amber-600">Based on your last 30-day average daily sales rate</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowReorderPanel(false)}
+                            className="p-1.5 hover:bg-amber-100 rounded-lg transition-colors text-amber-500"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {reorderAlerts.map(p => (
+                            <div key={p.id} className="flex items-center justify-between bg-white rounded-xl px-3.5 py-2.5 border border-amber-100 shadow-xs">
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-gray-900 truncate">{p.name}</p>
+                                    <p className="text-[10px] text-gray-400 font-mono">{p.sku} · {p.stock_quantity} {p.unit || 'Pcs'} left</p>
+                                </div>
+                                <div className="text-right shrink-0 ml-2">
+                                    <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${
+                                        p.daysLeft <= 3
+                                            ? 'bg-red-100 text-red-600'
+                                            : p.daysLeft <= 7
+                                            ? 'bg-orange-100 text-orange-600'
+                                            : 'bg-amber-100 text-amber-700'
+                                    }`}>
+                                        ~{p.daysLeft}d left
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Table */}
             <div className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -177,7 +262,7 @@ const Inventory = () => {
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Stock</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Buy Price</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Sell Price</th>
-                                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Velocity</th>
+                                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">ABC / Velocity</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-6 sm:px-8 py-4">Actions</th>
                             </tr>
                         </thead>
@@ -213,24 +298,29 @@ const Inventory = () => {
                                             TZS {parseFloat(p.selling_price).toLocaleString()}
                                         </td>
                                         <td className="px-4 py-4 text-center whitespace-nowrap">
-                                            {(() => {
-                                                const sold = parseInt(p.sale_items_sum_quantity ?? 0);
-                                                if (sold >= 50) return (
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-orange-600 bg-orange-50 border border-orange-100 px-2 py-1 rounded-lg">
-                                                        🔥 Fast
-                                                    </span>
-                                                );
-                                                if (sold >= 10) return (
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg">
-                                                        ⚡ Medium
-                                                    </span>
-                                                );
-                                                return (
-                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg">
-                                                        🐢 Slow
-                                                    </span>
-                                                );
-                                            })()}
+                                            <div className="flex flex-col items-center gap-1">
+                                                {/* ABC Badge */}
+                                                {(() => {
+                                                    const cls = abcMap[p.id] || 'C';
+                                                    const styles = {
+                                                        A: 'text-emerald-700 bg-emerald-50 border border-emerald-200',
+                                                        B: 'text-blue-700 bg-blue-50 border border-blue-200',
+                                                        C: 'text-gray-500 bg-gray-50 border border-gray-200',
+                                                    };
+                                                    return (
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${styles[cls]}`}>
+                                                            Class {cls}
+                                                        </span>
+                                                    );
+                                                })()}
+                                                {/* Velocity */}
+                                                {(() => {
+                                                    const sold = parseInt(p.sale_items_sum_quantity ?? 0);
+                                                    if (sold >= 50) return <span className="text-[10px] font-semibold text-orange-500">🔥 Fast</span>;
+                                                    if (sold >= 10) return <span className="text-[10px] font-semibold text-blue-500">⚡ Medium</span>;
+                                                    return <span className="text-[10px] font-semibold text-gray-400">🐢 Slow</span>;
+                                                })()}
+                                            </div>
                                         </td>
                                         <td className="px-6 sm:px-8 py-4 text-right whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
