@@ -14,7 +14,9 @@ import {
     MapPin, 
     User,
     Building2,
-    ShoppingBag
+    ShoppingBag,
+    TrendingUp,
+    Star
 } from 'lucide-react';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
@@ -190,6 +192,47 @@ const Suppliers = () => {
                 </div>
             </div>
 
+            {/* Performance Summary Stats */}
+            {suppliers.length > 0 && (() => {
+                const totalDeliveries = suppliers.reduce((s, x) => s + (x.purchases_count ?? 0), 0);
+                const totalValue = suppliers.reduce((s, x) => s + parseFloat(x.purchases_sum_purchase_price ?? 0), 0);
+                const topSupplier = [...suppliers].sort((a, b) => (b.purchases_count ?? 0) - (a.purchases_count ?? 0))[0];
+                return (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                <ShoppingBag className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Jumla Deliveries</p>
+                                <p className="text-2xl font-black text-gray-900">{totalDeliveries.toLocaleString()}</p>
+                                <p className="text-[11px] text-gray-400">Mara za kupokea mzigo</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div className="w-11 h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Thamani ya Jumla</p>
+                                <p className="text-lg font-black text-gray-900">TZS {totalValue.toLocaleString()}</p>
+                                <p className="text-[11px] text-gray-400">Stock iliyopokelewa</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                <Star className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Top Supplier</p>
+                                <p className="text-sm font-black text-gray-900 truncate max-w-[140px]">{topSupplier?.name || '—'}</p>
+                                <p className="text-[11px] text-gray-400">{topSupplier?.purchases_count ?? 0} deliveries</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Suppliers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {paginatedSuppliers.map(s => (
@@ -252,14 +295,22 @@ const Suppliers = () => {
                         </div>
 
                         {/* Card Footer */}
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
-                            <span className="text-[11px] font-bold text-gray-400 flex items-center gap-1">
-                                <ShoppingBag className="w-3.5 h-3.5" />
-                                {s.purchases_count ?? 0} Miamala ya Mzigo
-                            </span>
-                            <span className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1 rounded-lg">
-                                Active
-                            </span>
+                        <div className="pt-3 border-t border-gray-100 mt-2 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-gray-400 flex items-center gap-1">
+                                    <ShoppingBag className="w-3.5 h-3.5" />
+                                    {s.purchases_count ?? 0} Deliveries
+                                </span>
+                                <span className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1 rounded-lg">
+                                    Active
+                                </span>
+                            </div>
+                            {(s.purchases_sum_purchase_price > 0) && (
+                                <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600">
+                                    <TrendingUp className="w-3 h-3" />
+                                    TZS {parseFloat(s.purchases_sum_purchase_price).toLocaleString()} jumla
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

@@ -193,11 +193,12 @@ const Inventory = () => {
                     <table className="w-full min-w-[680px]">
                         <thead>
                             <tr className="border-b border-gray-100 bg-gray-50/50">
-                                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-6 sm:px-8 py-4">Product</th>
+                                <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Product</th>
                                 <th className="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Category</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Stock</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Buy Price</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Sell Price</th>
+                                <th className="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-4 py-4">Velocity</th>
                                 <th className="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-6 sm:px-8 py-4">Actions</th>
                             </tr>
                         </thead>
@@ -206,7 +207,7 @@ const Inventory = () => {
                                 const isLow = p.stock_quantity <= (p.min_stock ?? 5);
                                 return (
                                     <tr key={p.id} className="hover:bg-gray-50/60 transition-colors group">
-                                        <td className="px-6 sm:px-8 py-4">
+                                        <td className="px-4 py-4">
                                             <p className="font-bold text-gray-900 text-sm uppercase tracking-tight">{p.name}</p>
                                             <p className="text-xs text-gray-400 font-mono mt-0.5">{p.sku}</p>
                                         </td>
@@ -231,6 +232,26 @@ const Inventory = () => {
                                         </td>
                                         <td className="px-4 py-4 text-right text-sm font-black text-green-700 whitespace-nowrap">
                                             TZS {parseFloat(p.selling_price).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-4 text-center whitespace-nowrap">
+                                            {(() => {
+                                                const sold = parseInt(p.sale_items_sum_quantity ?? 0);
+                                                if (sold >= 50) return (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-orange-600 bg-orange-50 border border-orange-100 px-2 py-1 rounded-lg">
+                                                        🔥 Fast
+                                                    </span>
+                                                );
+                                                if (sold >= 10) return (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg">
+                                                        ⚡ Medium
+                                                    </span>
+                                                );
+                                                return (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg">
+                                                        🐢 Slow
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-6 sm:px-8 py-4 text-right whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
