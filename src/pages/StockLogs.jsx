@@ -59,29 +59,23 @@ const StockLogs = () => {
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-purple-600/20 rounded-full blur-[80px]" />
             </div>
 
-            {/* Controls Bar: Filter Tabs & Search */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    {['ALL', 'IN', 'OUT'].map(f => (
-                        <button 
-                            key={f} 
-                            onClick={() => { 
-                                setFilter(f); 
-                                setCurrentPage(1);
-                                setLoading(true); 
-                            }}
-                            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all active:scale-95 ${filter === f
-                                ? (f === 'IN' ? 'bg-green-600 text-white shadow-lg shadow-green-500/25'
-                                    : f === 'OUT' ? 'bg-red-500 text-white shadow-lg shadow-red-500/25'
-                                    : 'bg-gray-900 text-white shadow-lg')
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 shadow-xs'}`}
-                        >
-                            {f === 'ALL' ? '🗂 All Movements' : f === 'IN' ? '🟢 Stock IN' : '🔴 Stock OUT'}
-                        </button>
-                    ))}
-                </div>
+            {/* Controls Bar: Filter Dropdown & Search */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <select
+                    value={filter}
+                    onChange={e => {
+                        setFilter(e.target.value);
+                        setCurrentPage(1);
+                        setLoading(true);
+                    }}
+                    className="bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-purple-500 outline-none shadow-xs cursor-pointer shrink-0"
+                >
+                    <option value="ALL">🗂 All Movements</option>
+                    <option value="IN">🟢 Stock IN only</option>
+                    <option value="OUT">🔴 Stock OUT only</option>
+                </select>
 
-                <div className="relative w-full lg:w-72">
+                <div className="relative w-full sm:w-72">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input 
                         value={search} 
@@ -91,7 +85,7 @@ const StockLogs = () => {
                         }} 
                         type="text" 
                         placeholder="Search product or ref..."
-                        className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-xs" 
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-xs" 
                     />
                 </div>
             </div>

@@ -137,8 +137,8 @@ const Inventory = () => {
                 </div>
             )}
 
-            {/* Search & BI Filter Pills */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="relative w-full max-w-md">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input 
@@ -149,42 +149,21 @@ const Inventory = () => {
                         }} 
                         type="text" 
                         placeholder="Search by name or SKU..."
-                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl sm:rounded-2xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-xs" 
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-xs" 
                     />
                 </div>
 
-                {/* BI Quick Filter Toggle */}
-                <div className="flex items-center gap-2 bg-white p-1 rounded-xl sm:rounded-2xl border border-gray-100 shadow-xs">
-                    <button
-                        onClick={() => {
-                            setFilterLowStockOnly(false);
-                            setCurrentPage(1);
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            !filterLowStockOnly
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                    >
-                        All ({products.length})
-                    </button>
-                    <button
-                        onClick={() => {
-                            setFilterLowStockOnly(true);
-                            setCurrentPage(1);
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            filterLowStockOnly
-                                ? 'bg-red-600 text-white shadow-xs'
-                                : lowStockCount > 0
-                                ? 'text-red-600 hover:bg-red-50'
-                                : 'text-gray-400 hover:text-gray-700'
-                        }`}
-                    >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        Low Stock ({lowStockCount})
-                    </button>
-                </div>
+                <select
+                    value={filterLowStockOnly ? 'low' : 'all'}
+                    onChange={e => {
+                        setFilterLowStockOnly(e.target.value === 'low');
+                        setCurrentPage(1);
+                    }}
+                    className="bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none shadow-xs cursor-pointer shrink-0"
+                >
+                    <option value="all">📦 All Products ({products.length})</option>
+                    <option value="low">⚠️ Low Stock ({lowStockCount})</option>
+                </select>
             </div>
 
             {/* Table */}
