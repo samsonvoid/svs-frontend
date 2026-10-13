@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import Dashboard from './pages/Dashboard';
@@ -50,28 +51,30 @@ function App() {
   );
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected App Routes */}
-        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/alerts" element={<ProtectedRoute><Layout><Alerts /></Layout></ProtectedRoute>} />
-        <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
-        
-        {/* Admin Only Routes */}
-        <Route path="/purchases" element={<ProtectedRoute><AdminRoute><Layout><Purchases /></Layout></AdminRoute></ProtectedRoute>} />
-        <Route path="/suppliers" element={<ProtectedRoute><AdminRoute><Layout><Suppliers /></Layout></AdminRoute></ProtectedRoute>} />
-        <Route path="/stock-logs" element={<ProtectedRoute><AdminRoute><Layout><StockLogs /></Layout></AdminRoute></ProtectedRoute>} />
-        <Route path="/categories" element={<ProtectedRoute><AdminRoute><Layout><Categories /></Layout></AdminRoute></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><AdminRoute><Layout><Settings /></Layout></AdminRoute></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><AdminRoute><Layout><Reports /></Layout></AdminRoute></ProtectedRoute>} />
+    <LanguageProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected App Routes */}
+          <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/alerts" element={<ProtectedRoute><Layout><Alerts /></Layout></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
+          <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
+          
+          {/* Admin Only Routes */}
+          <Route path="/purchases" element={<ProtectedRoute><AdminRoute><Layout><Purchases /></Layout></AdminRoute></ProtectedRoute>} />
+          <Route path="/suppliers" element={<ProtectedRoute><AdminRoute><Layout><Suppliers /></Layout></AdminRoute></ProtectedRoute>} />
+          <Route path="/stock-logs" element={<ProtectedRoute><AdminRoute><Layout><StockLogs /></Layout></AdminRoute></ProtectedRoute>} />
+          <Route path="/categories" element={<ProtectedRoute><AdminRoute><Layout><Categories /></Layout></AdminRoute></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><AdminRoute><Layout><Settings /></Layout></AdminRoute></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><AdminRoute><Layout><Reports /></Layout></AdminRoute></ProtectedRoute>} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </LanguageProvider>
   );
 }
 

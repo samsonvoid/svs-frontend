@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
+    const { t } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
     
@@ -56,43 +58,43 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
 
     const navGroups = [
         {
-            title: 'Overview & Alerts',
+            title: t('nav_overview'),
             items: [
-                { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-                { name: 'Tahadhari (Alerts)', path: '/alerts', icon: Bell, badge: alertCount },
+                { name: t('nav_dashboard'), path: '/', icon: LayoutDashboard },
+                { name: t('nav_alerts'), path: '/alerts', icon: Bell, badge: alertCount },
             ]
         },
         {
-            title: 'Inventory & Stoo',
+            title: t('nav_inventory_grp'),
             items: [
                 { 
-                    name: 'Bidhaa (Stock Items)', 
+                    name: t('nav_inventory'), 
                     path: '/inventory', 
                     icon: Box,
                     hasDropdown: true,
                     isOpen: inventoryOpen,
                     toggle: () => setInventoryOpen(!inventoryOpen),
                     submenu: [
-                        { name: 'Stock List', path: '/inventory' },
-                        { name: 'Categories (Makundi)', path: '/categories' },
+                        { name: t('nav_stock_list'), path: '/inventory' },
+                        { name: t('nav_categories'), path: '/categories' },
                     ]
                 },
-                { name: 'Manunuzi (Stock In)', path: '/purchases', icon: PackagePlus, adminOnly: true },
-                { name: 'Wasambazaji (Suppliers)', path: '/suppliers', icon: Truck, adminOnly: true },
-                { name: 'Kumbukumbu (Logs)', path: '/stock-logs', icon: ClipboardList, adminOnly: true },
+                { name: t('nav_purchases'), path: '/purchases', icon: PackagePlus, adminOnly: true },
+                { name: t('nav_suppliers'), path: '/suppliers', icon: Truck, adminOnly: true },
+                { name: t('nav_logs'), path: '/stock-logs', icon: ClipboardList, adminOnly: true },
             ]
         },
         {
-            title: 'Sales & Biashara',
+            title: t('nav_sales_grp'),
             items: [
-                { name: 'Mauzo Mapya (POS)', path: '/sales', icon: ShoppingCart },
-                { name: 'Ripoti (Reports)', path: '/reports', icon: BarChart3, adminOnly: true },
+                { name: t('nav_sales'), path: '/sales', icon: ShoppingCart },
+                { name: t('nav_reports'), path: '/reports', icon: BarChart3, adminOnly: true },
             ]
         },
         {
-            title: 'Mfumo',
+            title: t('nav_system'),
             items: [
-                { name: 'Mipangilio (Settings)', path: '/settings', icon: Settings, adminOnly: true },
+                { name: t('nav_settings'), path: '/settings', icon: Settings, adminOnly: true },
             ]
         }
     ].map(group => ({
@@ -235,10 +237,10 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
                     {/* Quick Info Box */}
                     <div className="px-3 pt-2">
                         <div className="p-3.5 rounded-2xl bg-gray-900/70 border border-gray-800/70">
-                            <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-2">Live System</p>
+                            <p className="text-[10px] uppercase text-gray-500 font-bold tracking-wider mb-2">{t('lbl_live_system')}</p>
                             <div className="flex items-center gap-2 text-xs text-gray-300">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span className="font-medium text-emerald-400">Database Synced</span>
+                                <span className="font-medium text-emerald-400">{t('lbl_db_synced')}</span>
                             </div>
                             <p className="text-[10px] text-gray-500 mt-1">Laravel 12 + React 19</p>
                         </div>

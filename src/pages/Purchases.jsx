@@ -3,8 +3,10 @@ import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag, Search, Tr
 import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
+import { useLanguage } from '../context/LanguageContext';
 
 const Purchases = () => {
+    const { t } = useLanguage();
     const [searchParams] = useSearchParams();
     const queryProductId = searchParams.get('product_id');
 
@@ -164,11 +166,11 @@ const Purchases = () => {
                         <Wallet className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Gharama Yote</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_pur_cost')}</p>
                         <p className="text-sm sm:text-xl font-black text-blue-600 mt-0.5 truncate">
                             TZS {Math.round(purchaseStats.totalCost).toLocaleString()}
                         </p>
-                        <p className="text-[10px] text-gray-400 font-medium">Jumla ya malipo</p>
+                        <p className="text-[10px] text-gray-400 font-medium">{t('kpi_pur_cost_sub')}</p>
                     </div>
                 </div>
 
@@ -178,9 +180,9 @@ const Purchases = () => {
                         <PackagePlus className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Vipande Vilivyoingia</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_pur_units')}</p>
                         <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.totalUnits.toLocaleString()}</p>
-                        <p className="text-[10px] text-purple-600 font-medium">Jumla ya items</p>
+                        <p className="text-[10px] text-purple-600 font-medium">{t('kpi_pur_units_sub')}</p>
                     </div>
                 </div>
 
@@ -190,9 +192,9 @@ const Purchases = () => {
                         <ClipboardCheck className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Idadi ya Mizigo</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_pur_batches')}</p>
                         <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.totalBatches.toLocaleString()}</p>
-                        <p className="text-[10px] text-teal-600 font-medium">Awamu/rekodi</p>
+                        <p className="text-[10px] text-teal-600 font-medium">{t('kpi_pur_batches_sub')}</p>
                     </div>
                 </div>
 
@@ -202,9 +204,9 @@ const Purchases = () => {
                         <Truck className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Wasambazaji</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_pur_suppliers')}</p>
                         <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.uniqueSuppliers}</p>
-                        <p className="text-[10px] text-amber-600 font-medium">Tofauti waliohusika</p>
+                        <p className="text-[10px] text-amber-600 font-medium">{t('kpi_pur_sup_sub')}</p>
                     </div>
                 </div>
             </div>

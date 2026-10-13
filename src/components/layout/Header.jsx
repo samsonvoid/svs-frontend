@@ -1,57 +1,30 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Menu, Calendar } from 'lucide-react';
-
-const PAGE_META = {
-    '/': {
-        title: 'Dashboard Overview',
-        subtitle: 'Muhtasari wa Biashara & Takwimu',
-    },
-    '/alerts': {
-        title: 'Tahadhari za Stoo (Alerts Hub)',
-        subtitle: 'Kituo cha Bidhaa Zilizokwisha & Zinazohitaji Agizo',
-    },
-    '/inventory': {
-        title: 'Inventory / Bidhaa',
-        subtitle: 'Usimamizi wa Stock & Orodha ya Bidhaa',
-    },
-    '/purchases': {
-        title: 'Manunuzi (Stock In)',
-        subtitle: 'Kupokea Mzigo Mpya Kutoka Suppliers',
-    },
-    '/suppliers': {
-        title: 'Wasambazaji (Suppliers)',
-        subtitle: 'Usimamizi wa Wasambazaji & Mawasiliano',
-    },
-    '/sales': {
-        title: 'Mauzo (Sales)',
-        subtitle: 'Utoaji wa Bidhaa & Mauzo Mapya',
-    },
-    '/reports': {
-        title: 'Ripoti (Business Reports)',
-        subtitle: 'Uchambuzi wa Mapato, Faida & Mizania',
-    },
-    '/stock-logs': {
-        title: 'Audit Trail (Stock Logs)',
-        subtitle: 'Historia ya Mienendo Yote ya Stock (IN / OUT)',
-    },
-    '/categories': {
-        title: 'Makundi (Categories)',
-        subtitle: 'Upangaji wa Makundi ya Bidhaa',
-    },
-    '/settings': {
-        title: 'Mipangilio (Settings)',
-        subtitle: 'Taarifa za Biashara & Mfumo',
-    },
-};
+import { Menu, Calendar, Globe } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Header = ({ toggleSidebar }) => {
     const location = useLocation();
+    const { lang, toggleLang, t } = useLanguage();
     const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
-    const page = PAGE_META[location.pathname] || {
-        title: 'S.Void Stock',
-        subtitle: 'Inventory Intelligence System',
+
+    // Dynamic page meta driven by translations
+    const PAGE_META = {
+        '/':           { titleKey: 'page_dashboard',  subKey: 'page_dashboard_sub' },
+        '/alerts':     { titleKey: 'page_alerts',     subKey: 'page_alerts_sub' },
+        '/inventory':  { titleKey: 'page_inventory',  subKey: 'page_inventory_sub' },
+        '/purchases':  { titleKey: 'page_purchases',  subKey: 'page_purchases_sub' },
+        '/suppliers':  { titleKey: 'page_suppliers',  subKey: 'page_suppliers_sub' },
+        '/sales':      { titleKey: 'page_sales',      subKey: 'page_sales_sub' },
+        '/reports':    { titleKey: 'page_reports',    subKey: 'page_reports_sub' },
+        '/stock-logs': { titleKey: 'page_logs',       subKey: 'page_logs_sub' },
+        '/categories': { titleKey: 'page_categories', subKey: 'page_categories_sub' },
+        '/settings':   { titleKey: 'page_settings',  subKey: 'page_settings_sub' },
     };
+
+    const meta = PAGE_META[location.pathname];
+    const pageTitle    = meta ? t(meta.titleKey)  : 'S.Void Stock';
+    const pageSubtitle = meta ? t(meta.subKey)    : 'Inventory Intelligence System';
 
     const today = new Date().toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -59,11 +32,9 @@ const Header = ({ toggleSidebar }) => {
         year: 'numeric'
     });
 
-    // Clean user name (e.g. remove "(Admin)" if appended to name to avoid redundant badge and ugly initials)
     const rawName = user.name || 'User';
     const displayName = rawName.replace(/\s*\([^)]*\)/g, '').trim() || rawName;
 
-    // Generate clean 1-2 letter initials (e.g. "Samson" -> "S", "Samson Void" -> "SV")
     const initials = displayName
         .split(/\s+/)
         .filter(Boolean)
@@ -85,21 +56,36 @@ const Header = ({ toggleSidebar }) => {
                 </button>
                 <div className="min-w-0">
                     <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight truncate">
-                        {page.title}
+                        {pageTitle}
                     </h2>
                     <p className="text-[11px] text-gray-500 hidden sm:block truncate font-medium">
-                        {page.subtitle}
+                        {pageSubtitle}
                     </p>
                 </div>
             </div>
 
-            {/* Right: Date & User Profile */}
-            <div className="flex items-center gap-3 sm:gap-5 shrink-0">
+            {/* Right: Lang toggle + Date + User Profile */}
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+
+                {/* ── Language Toggle ── */}
+                <button
+                    onClick={toggleLang}
+                    title={lang === 'en' ? 'Switch to Kiswahili' : 'Switch to English'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 text-xs font-bold text-gray-600 transition-all active:scale-95 select-none"
+                >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span className="uppercase tracking-wider">
+                        {lang === 'en' ? 'SW' : 'EN'}
+                    </span>
+                </button>
+
+                {/* Date */}
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-100 text-xs font-semibold text-gray-600">
                     <Calendar className="w-3.5 h-3.5 text-blue-600" />
                     <span>{today}</span>
                 </div>
 
+                {/* User Profile */}
                 <div className="flex items-center gap-3 pl-2 sm:pl-3 sm:border-l border-gray-200">
                     <div className="hidden sm:block text-right">
                         <p className="text-xs font-bold text-gray-900 leading-tight truncate max-w-[130px]">
@@ -110,7 +96,6 @@ const Header = ({ toggleSidebar }) => {
                         </span>
                     </div>
 
-                    {/* Clean native avatar badge */}
                     <div 
                         title={`${displayName} (${user.role || 'User'})`}
                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-sm ring-2 ring-blue-500/20 shrink-0 select-none cursor-default"

@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter, Layers, Coins } from 'lucide-react';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
+import { useLanguage } from '../context/LanguageContext';
 
 const Inventory = () => {
+    const { t } = useLanguage();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -184,9 +186,9 @@ const Inventory = () => {
                         <Box className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Aina za Bidhaa</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_total_skus')}</p>
                         <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{inventoryStats.totalProducts.toLocaleString()}</p>
-                        <p className="text-[10px] text-gray-400 font-medium">SKUs zilizosajiliwa</p>
+                        <p className="text-[10px] text-gray-400 font-medium">{t('kpi_total_skus_sub')}</p>
                     </div>
                 </div>
 
@@ -196,9 +198,9 @@ const Inventory = () => {
                         <Layers className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Vipande Stoo</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_stock_units')}</p>
                         <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{inventoryStats.totalUnits.toLocaleString()}</p>
-                        <p className="text-[10px] text-purple-600 font-medium">Jumla ya items zote</p>
+                        <p className="text-[10px] text-purple-600 font-medium">{t('kpi_stock_units_sub')}</p>
                     </div>
                 </div>
 
@@ -208,11 +210,11 @@ const Inventory = () => {
                         <Coins className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Thamani ya Stoo</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_inv_value')}</p>
                         <p className="text-sm sm:text-xl font-black text-emerald-600 mt-0.5 truncate">
                             TZS {Math.round(inventoryStats.totalValue).toLocaleString()}
                         </p>
-                        <p className="text-[10px] text-gray-400 font-medium">Bei ya ununuzi (Cost)</p>
+                        <p className="text-[10px] text-gray-400 font-medium">{t('kpi_inv_value_sub')}</p>
                     </div>
                 </div>
 
@@ -224,12 +226,14 @@ const Inventory = () => {
                         <AlertTriangle className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Zilizopungua</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_low_stock')}</p>
                         <p className={`text-lg sm:text-2xl font-black mt-0.5 ${inventoryStats.lowStock > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
                             {inventoryStats.lowStock}
                         </p>
                         <p className="text-[10px] text-gray-400 font-medium truncate">
-                            {inventoryStats.outOfStock > 0 ? `${inventoryStats.outOfStock} zimeisha` : 'Chini ya kiwango'}
+                            {inventoryStats.outOfStock > 0
+                                ? t('kpi_out_of_stock', { n: inventoryStats.outOfStock })
+                                : t('kpi_low_stock_sub')}
                         </p>
                     </div>
                 </div>
