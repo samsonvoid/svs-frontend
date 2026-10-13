@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter } from 'lucide-react';
+import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter, Layers, Coins } from 'lucide-react';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
 
@@ -85,6 +85,15 @@ const Inventory = () => {
         return products.filter(p => p.stock_quantity <= (p.min_stock ?? 5)).length;
     }, [products]);
 
+    const inventoryStats = useMemo(() => {
+        const totalProducts = products.length;
+        const totalUnits = products.reduce((acc, p) => acc + (parseInt(p.stock_quantity) || 0), 0);
+        const totalValue = products.reduce((acc, p) => acc + ((parseInt(p.stock_quantity) || 0) * (parseFloat(p.buying_price) || 0)), 0);
+        const lowStock = products.filter(p => (parseInt(p.stock_quantity) || 0) <= (p.min_stock ?? 5)).length;
+        const outOfStock = products.filter(p => (parseInt(p.stock_quantity) || 0) <= 0).length;
+        return { totalProducts, totalUnits, totalValue, lowStock, outOfStock };
+    }, [products]);
+
     // ── ABC Analysis (Pareto) ────────────────────────────────────────────────
     // Rank products by total revenue generated (selling_price × qty_sold)
     // A = top items covering 80% of revenue, B = next 15%, C = bottom 5%
@@ -165,6 +174,65 @@ const Inventory = () => {
                     </button>
                 </div>
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px]" />
+            </div>
+
+            {/* KPI Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+                {/* Card 1: Total SKUs */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Box className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Aina za Bidhaa</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{inventoryStats.totalProducts.toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-400 font-medium">SKUs zilizosajiliwa</p>
+                    </div>
+                </div>
+
+                {/* Card 2: Total Units */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <Layers className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Vipande Stoo</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{inventoryStats.totalUnits.toLocaleString()}</p>
+                        <p className="text-[10px] text-purple-600 font-medium">Jumla ya items zote</p>
+                    </div>
+                </div>
+
+                {/* Card 3: Inventory Valuation */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Coins className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Thamani ya Stoo</p>
+                        <p className="text-sm sm:text-xl font-black text-emerald-600 mt-0.5 truncate">
+                            TZS {Math.round(inventoryStats.totalValue).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-medium">Bei ya ununuzi (Cost)</p>
+                    </div>
+                </div>
+
+                {/* Card 4: Low Stock Alert */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                        inventoryStats.lowStock > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'
+                    }`}>
+                        <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Zilizopungua</p>
+                        <p className={`text-lg sm:text-2xl font-black mt-0.5 ${inventoryStats.lowStock > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
+                            {inventoryStats.lowStock}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-medium truncate">
+                            {inventoryStats.outOfStock > 0 ? `${inventoryStats.outOfStock} zimeisha` : 'Chini ya kiwango'}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Toast */}

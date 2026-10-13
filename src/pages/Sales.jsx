@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Plus, Trash2, Receipt, Search, Loader2, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Trash2, Receipt, Search, Loader2, Download, CheckCircle, AlertCircle, TrendingUp, CreditCard } from 'lucide-react';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
 
@@ -78,6 +78,22 @@ const Sales = () => {
         }
     };
 
+    const salesStats = useMemo(() => {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todaySales = salesHistory.filter(s => s.created_at && s.created_at.slice(0, 10) === todayStr);
+        const todayRevenue = todaySales.reduce((acc, s) => acc + (parseFloat(s.total_amount) || 0), 0);
+        const totalRevenue = salesHistory.reduce((acc, s) => acc + (parseFloat(s.total_amount) || 0), 0);
+        const totalTransactions = salesHistory.length;
+        const totalUnitsSold = salesHistory.reduce((acc, s) => {
+            if (s.sale_items && Array.isArray(s.sale_items)) {
+                return acc + s.sale_items.reduce((sum, item) => sum + (parseInt(item.quantity) || 1), 0);
+            }
+            return acc + 1;
+        }, 0);
+        const avgSale = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+        return { todayRevenue, todayCount: todaySales.length, totalRevenue, totalTransactions, totalUnitsSold, avgSale };
+    }, [salesHistory]);
+
     const filteredSales = useMemo(() => {
         return salesHistory.filter(sale => {
             const term = salesSearch.toLowerCase();
@@ -110,6 +126,61 @@ const Sales = () => {
                     </p>
                 </div>
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-green-600/20 rounded-full blur-[80px]" />
+            </div>
+
+            {/* KPI Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+                {/* Card 1: Today's Revenue */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Mauzo Leo</p>
+                        <p className="text-sm sm:text-xl font-black text-emerald-600 mt-0.5 truncate">
+                            TZS {Math.round(salesStats.todayRevenue).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-medium">{salesStats.todayCount} miamala leo</p>
+                    </div>
+                </div>
+
+                {/* Card 2: Total Transactions */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Receipt className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Jumla Risiti</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{salesStats.totalTransactions.toLocaleString()}</p>
+                        <p className="text-[10px] text-blue-600 font-medium">Miamala yote</p>
+                    </div>
+                </div>
+
+                {/* Card 3: Total Units Sold */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                        <ShoppingCart className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Vipande Vilivyouzwa</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{salesStats.totalUnitsSold.toLocaleString()}</p>
+                        <p className="text-[10px] text-orange-600 font-medium">Jumla ya items</p>
+                    </div>
+                </div>
+
+                {/* Card 4: Average Sale */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Wastani Risiti</p>
+                        <p className="text-sm sm:text-xl font-black text-indigo-600 mt-0.5 truncate">
+                            TZS {Math.round(salesStats.avgSale).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-medium">Kwa kila muamala</p>
+                    </div>
+                </div>
             </div>
 
             {toast && (

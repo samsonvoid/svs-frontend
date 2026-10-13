@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag, Search } from 'lucide-react';
+import { PackagePlus, CheckCircle, AlertCircle, Loader2, ShoppingBag, Search, Truck, ClipboardCheck, Wallet } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
@@ -113,6 +113,15 @@ const Purchases = () => {
         return { totalQty, totalValue, count: filteredHistory.length };
     }, [filteredHistory]);
 
+    // KPI summary cards — all-time totals across full history (not filtered)
+    const purchaseStats = useMemo(() => {
+        const totalCost = history.reduce((s, i) => s + (parseFloat(i.purchase_price ?? 0) * parseInt(i.quantity ?? 0)), 0);
+        const totalUnits = history.reduce((s, i) => s + parseInt(i.quantity ?? 0), 0);
+        const totalBatches = history.length;
+        const uniqueSuppliers = new Set(history.map(i => i.supplier_name).filter(Boolean)).size;
+        return { totalCost, totalUnits, totalBatches, uniqueSuppliers };
+    }, [history]);
+
     // Unique supplier names present in history (for chips)
     const historySuppliers = useMemo(() => {
         const names = history.map(i => i.supplier_name).filter(Boolean);
@@ -145,6 +154,59 @@ const Purchases = () => {
                     </p>
                 </div>
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px]"></div>
+            </div>
+
+            {/* KPI Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+                {/* Card 1: Total Purchase Cost */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Wallet className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Gharama Yote</p>
+                        <p className="text-sm sm:text-xl font-black text-blue-600 mt-0.5 truncate">
+                            TZS {Math.round(purchaseStats.totalCost).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-medium">Jumla ya malipo</p>
+                    </div>
+                </div>
+
+                {/* Card 2: Total Units Received */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <PackagePlus className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Vipande Vilivyoingia</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.totalUnits.toLocaleString()}</p>
+                        <p className="text-[10px] text-purple-600 font-medium">Jumla ya items</p>
+                    </div>
+                </div>
+
+                {/* Card 3: Total Batches */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                        <ClipboardCheck className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Idadi ya Mizigo</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.totalBatches.toLocaleString()}</p>
+                        <p className="text-[10px] text-teal-600 font-medium">Awamu/rekodi</p>
+                    </div>
+                </div>
+
+                {/* Card 4: Unique Suppliers */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <Truck className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">Wasambazaji</p>
+                        <p className="text-lg sm:text-2xl font-black text-gray-900 mt-0.5">{purchaseStats.uniqueSuppliers}</p>
+                        <p className="text-[10px] text-amber-600 font-medium">Tofauti waliohusika</p>
+                    </div>
+                </div>
             </div>
 
             {/* Toast */}
