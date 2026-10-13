@@ -38,7 +38,7 @@ const Dashboard = () => {
     const [trendLoading, setTrendLoading] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
-    const isAdmin = user.role === 'Admin';
+    const isAdmin = !user.role || user.role.toLowerCase() === 'admin';
 
     const fetchDashboardData = async () => {
         try {
