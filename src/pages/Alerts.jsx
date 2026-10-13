@@ -15,8 +15,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
+import { useLanguage } from '../context/LanguageContext';
 
 const Alerts = () => {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -152,9 +154,9 @@ const Alerts = () => {
                             <XCircle className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Zimekwisha Kabisa</p>
-                            <p className="text-xl font-black text-red-600">{outCount} Bidhaa</p>
-                            <p className="text-[11px] text-gray-400">0 Qty iliyobaki</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('alerts_out_stock')}</p>
+                            <p className="text-xl font-black text-red-600">{outCount}</p>
+                            <p className="text-[11px] text-gray-400">{t('alerts_out_sub')}</p>
                         </div>
                     </div>
                 </div>
@@ -170,9 +172,9 @@ const Alerts = () => {
                             <TrendingDown className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Chini ya Kiwango</p>
-                            <p className="text-xl font-black text-orange-600">{lowCount} Bidhaa</p>
-                            <p className="text-[11px] text-gray-400">≤ Min Stock limit</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('alerts_low_stock')}</p>
+                            <p className="text-xl font-black text-orange-600">{lowCount}</p>
+                            <p className="text-[11px] text-gray-400">{t('alerts_low_sub')}</p>
                         </div>
                     </div>
                 </div>
@@ -188,9 +190,9 @@ const Alerts = () => {
                             <Clock className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tahadhari ya Kasi</p>
-                            <p className="text-xl font-black text-amber-600">{forecastCount} Bidhaa</p>
-                            <p className="text-[11px] text-gray-400">&lt; 14 Siku zimebaki</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('alerts_forecast')}</p>
+                            <p className="text-xl font-black text-amber-600">{forecastCount}</p>
+                            <p className="text-[11px] text-gray-400">{t('alerts_forecast_sub')}</p>
                         </div>
                     </div>
                 </div>

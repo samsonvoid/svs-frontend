@@ -14,8 +14,10 @@ import StatCard from '../components/dashboard/StatCard';
 import SalesTrendChart from '../components/dashboard/SalesTrendChart';
 import CategoryStockChart from '../components/dashboard/CategoryStockChart';
 import api from '../api/axios';
+import { useLanguage } from '../context/LanguageContext';
 
 const Dashboard = () => {
+    const { t } = useLanguage();
     const [stats, setStats] = useState(null);
     const [trend, setTrend] = useState([]);
     const [categoryDist, setCategoryDist] = useState([]);
@@ -81,14 +83,14 @@ const Dashboard = () => {
                 <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-xl sm:text-2xl lg:text-4xl font-black tracking-tight mb-2">
-                            Karibu Tena, <span className="text-blue-400">{user.name || 'Admin'}</span>
+                            {t('dash_welcome')}, <span className="text-blue-400">{user.name || 'Admin'}</span>
                         </h1>
                         <p className="text-gray-400 text-xs sm:text-sm lg:text-base max-w-xl leading-relaxed">
-                            Ripoti ya wakati halisi ya stoo, mwenendo wa mapato, faida halisi, na ugawaji wa mtaji.
+                            {t('dash_welcome_sub')}
                         </p>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 text-xs font-semibold text-gray-200 shrink-0">
-                        ⚡ Live Sync Active
+                        ⚡ {t('dash_live_sync')}
                     </div>
                 </div>
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px]"></div>
@@ -97,29 +99,29 @@ const Dashboard = () => {
             {/* Executive KPI Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <StatCard 
-                    title="Mauzo ya Leo" 
+                    title={t('dash_today_sales')} 
                     value={`TZS ${Number(stats?.today_sales || 0).toLocaleString()}`} 
                     icon={TrendingUp} 
                     colorClass="bg-emerald-50 text-emerald-600" 
-                    trend="Leo" 
+                    trend={t('dash_today_trend')} 
                 />
                 <StatCard 
-                    title="Faida ya Mwezi (Gross)" 
+                    title={t('dash_month_profit')} 
                     value={`TZS ${Number(stats?.month_profit || 0).toLocaleString()}`} 
                     icon={DollarSign} 
                     colorClass="bg-purple-50 text-purple-600" 
-                    trend={`${stats?.gross_margin_pct || 0}% Margin`} 
+                    trend={t('dash_margin', { pct: stats?.gross_margin_pct || 0 })} 
                 />
                 <StatCard 
-                    title="Thamani ya Mtaji Stoo" 
+                    title={t('dash_stock_value')} 
                     value={`TZS ${Number(stats?.total_stock_value || 0).toLocaleString()}`} 
                     icon={Box} 
                     colorClass="bg-blue-50 text-blue-600" 
-                    trend={`${stats?.total_products || 0} Bidhaa`}
+                    trend={t('dash_products_count', { n: stats?.total_products || 0 })}
                 />
                 <StatCard 
-                    title="Bidhaa Chache (Alert)" 
-                    value={`${stats?.low_stock_count || 0} Items`} 
+                    title={t('dash_low_stock')} 
+                    value={t('dash_items_count', { n: stats?.low_stock_count || 0 })} 
                     icon={AlertTriangle} 
                     colorClass="bg-orange-50 text-orange-600" 
                     borderForce="border-l-orange-500" 

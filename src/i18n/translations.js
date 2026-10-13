@@ -110,4 +110,30 @@ export const translations = {
     lbl_no_data:        { en: 'No data found.',                sw: 'Hakuna data.' },
     lbl_live_system:    { en: 'Live System',                   sw: 'Mfumo Hai' },
     lbl_db_synced:      { en: 'Database Synced',               sw: 'DB Imesawazishwa' },
+
+    // ── Dashboard Executive KPI Cards ─────────────────────────────────────────
+    dash_welcome:       { en: 'Welcome Back',                  sw: 'Karibu Tena' },
+    dash_welcome_sub:   { en: 'Real-time financial report, sales trends, net profit and inventory capital.', sw: 'Ripoti ya wakati halisi ya stoo, mwenendo wa mapato, faida halisi, na ugawaji wa mtaji.' },
+    dash_live_sync:     { en: 'Live Sync Active',              sw: 'Live Sync Inafanya Kazi' },
+    dash_today_sales:   { en: "Today's Sales",                 sw: 'Mauzo ya Leo' },
+    dash_today_trend:   { en: 'Today',                         sw: 'Leo' },
+    dash_month_profit:  { en: 'Monthly Profit (Gross)',        sw: 'Faida ya Mwezi (Gross)' },
+    dash_margin:        { en: '{pct}% Margin',                 sw: '{pct}% Margin' },
+    dash_stock_value:   { en: 'Inventory Valuation',           sw: 'Thamani ya Mtaji Stoo' },
+    dash_products_count:{ en: '{n} Products',                  sw: '{n} Bidhaa' },
+    dash_low_stock:     { en: 'Low Stock (Alert)',             sw: 'Bidhaa Chache (Tahadhari)' },
+    dash_items_count:   { en: '{n} Items',                     sw: '{n} Items' },
+    dash_trend_title:   { en: 'Revenue vs Profit Trend',       sw: 'Mwenendo wa Mapato na Faida' },
+    dash_trend_sub:     { en: 'Cashflow & Gross Profit Analytics', sw: 'Uchambuzi wa Mapato na Faida Halisi' },
+    dash_last_7_days:   { en: 'Last 7 Days',                   sw: 'Siku 7 Zilizopita' },
+    dash_last_30_days:  { en: 'Last 30 Days',                  sw: 'Siku 30 Zilizopita' },
+
+    // ── Alerts Hub KPI Cards ──────────────────────────────────────────────────
+    alerts_total:       { en: 'Total Alerts',                  sw: 'Jumla ya Tahadhari' },
+    alerts_out_stock:   { en: 'Out of Stock',                  sw: 'Zimekwisha Kabisa' },
+    alerts_out_sub:     { en: '0 Qty remaining',               sw: '0 Qty iliyobaki' },
+    alerts_low_stock:   { en: 'Low Stock Level',               sw: 'Chini ya Kiwango' },
+    alerts_low_sub:     { en: 'Below minimum safety',          sw: 'Chini ya kiwango salama' },
+    alerts_forecast:    { en: 'Depleting Soon',                sw: 'Zinakaribia Kuisha' },
+    alerts_forecast_sub:{ en: 'Expected in ~14 days',          sw: 'Zitaisha ndani ya siku 14' },
 };
