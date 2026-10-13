@@ -8,8 +8,18 @@ import {
     DollarSign,
     PieChart as PieIcon,
     Flame,
-    ArrowUpRight
+    ArrowUpRight,
+    ArrowDownLeft,
+    ArrowRight,
+    ShoppingCart,
+    PackagePlus,
+    Plus,
+    BarChart3,
+    Bell,
+    Hourglass,
+    Wallet
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import StatCard from '../components/dashboard/StatCard';
 import SalesTrendChart from '../components/dashboard/SalesTrendChart';
 import CategoryStockChart from '../components/dashboard/CategoryStockChart';
@@ -28,6 +38,7 @@ const Dashboard = () => {
     const [trendLoading, setTrendLoading] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('svs_user') || '{}');
+    const isAdmin = user.role === 'Admin';
 
     const fetchDashboardData = async () => {
         try {
@@ -96,6 +107,62 @@ const Dashboard = () => {
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px]"></div>
             </div>
 
+            {/* Quick Actions Dock */}
+            <div className="bg-white p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-xs flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-2 pl-2 shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    <span className="text-xs font-black uppercase tracking-wider text-gray-500">{t('qa_title')}:</span>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <Link 
+                        to="/sales" 
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                    >
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>{t('qa_quick_pos')}</span>
+                    </Link>
+                    {isAdmin && (
+                        <Link 
+                            to="/purchases" 
+                            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-blue-200/60 transition-all active:scale-95 shrink-0"
+                        >
+                            <PackagePlus className="w-4 h-4" />
+                            <span>{t('qa_stock_in')}</span>
+                        </Link>
+                    )}
+                    {isAdmin && (
+                        <Link 
+                            to="/inventory" 
+                            className="flex items-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-purple-200/60 transition-all active:scale-95 shrink-0"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>{t('qa_add_prod')}</span>
+                        </Link>
+                    )}
+                    {isAdmin && (
+                        <Link 
+                            to="/reports" 
+                            className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-gray-200/60 transition-all active:scale-95 shrink-0"
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            <span>{t('qa_reports')}</span>
+                        </Link>
+                    )}
+                    <Link 
+                        to="/alerts" 
+                        className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-red-200/60 transition-all active:scale-95 shrink-0"
+                    >
+                        <Bell className="w-4 h-4" />
+                        <span>{t('qa_alerts')}</span>
+                        {stats?.low_stock_count > 0 && (
+                            <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                                {stats.low_stock_count}
+                            </span>
+                        )}
+                    </Link>
+                </div>
+            </div>
+
             {/* Executive KPI Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <StatCard 
@@ -126,6 +193,91 @@ const Dashboard = () => {
                     colorClass="bg-orange-50 text-orange-600" 
                     borderForce="border-l-orange-500" 
                 />
+            </div>
+
+            {/* Strategic Health & Cashflow Strip: Dormant Capital + Net Cashflow Pulse */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                {/* Dormant Capital (Dead Stock) Card */}
+                <div className="bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-200/70 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+                                <Hourglass className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs font-black uppercase tracking-wider text-amber-900">{t('dash_dead_stock')}</p>
+                                    <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">Slow Movers</span>
+                                </div>
+                                <p className="text-xl sm:text-2xl font-black text-gray-900 mt-1">
+                                    TZS {Number(stats?.dead_stock_value || 0).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        {isAdmin && (
+                            <Link 
+                                to="/inventory" 
+                                className="text-xs font-bold text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-all shrink-0 flex items-center gap-1"
+                            >
+                                <span>{t('dash_dead_action')}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3 font-medium">
+                        {t('dash_dead_stock_sub', { n: stats?.dead_stock_count || 0 })}
+                    </p>
+                </div>
+
+                {/* Net Cashflow Pulse Card */}
+                <div className="bg-gradient-to-br from-blue-500/10 via-white to-emerald-500/5 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-blue-200/70 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20">
+                                <Wallet className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs font-black uppercase tracking-wider text-blue-900">{t('dash_net_cashflow')}</p>
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
+                                        (stats?.today_net_cashflow || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {(stats?.today_net_cashflow || 0) >= 0 ? '+ Surplus' : '- Deficit'}
+                                    </span>
+                                </div>
+                                <p className={`text-xl sm:text-2xl font-black mt-1 ${
+                                    (stats?.today_net_cashflow || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                                }`}>
+                                    TZS {Number(stats?.today_net_cashflow || 0).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('dash_net_month')}</p>
+                            <p className="text-sm font-black text-gray-800 mt-0.5">
+                                TZS {Number(stats?.month_net_cashflow || 0).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-gray-100 text-xs">
+                        <div className="flex items-center justify-between bg-emerald-50/80 px-2.5 py-1.5 rounded-lg">
+                            <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" /> {t('dash_cash_in')}
+                            </span>
+                            <span className="font-black text-emerald-700">
+                                TZS {Number(stats?.today_sales || 0).toLocaleString()}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between bg-blue-50/80 px-2.5 py-1.5 rounded-lg">
+                            <span className="text-[11px] font-bold text-blue-800 flex items-center gap-1">
+                                <ArrowUpRight className="w-3.5 h-3.5 text-blue-600" /> {t('dash_cash_out')}
+                            </span>
+                            <span className="font-black text-blue-700">
+                                TZS {Number(stats?.today_purchases || 0).toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Core BI Visualizations: Cashflow/Profit Trend & Category Donut */}

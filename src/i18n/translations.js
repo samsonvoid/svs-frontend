@@ -128,6 +128,22 @@ export const translations = {
     dash_last_7_days:   { en: 'Last 7 Days',                   sw: 'Siku 7 Zilizopita' },
     dash_last_30_days:  { en: 'Last 30 Days',                  sw: 'Siku 30 Zilizopita' },
 
+    // ── Dashboard Quick Actions ──────────────────────────────────────────────
+    qa_title:           { en: 'Quick Actions',                 sw: 'Hatua za Haraka' },
+    qa_quick_pos:       { en: 'New Sale (POS)',                sw: 'Uza Sasa (POS)' },
+    qa_stock_in:        { en: 'Receive Stock',                 sw: 'Pokea Mzigo' },
+    qa_add_prod:        { en: 'Add Product',                   sw: 'Sajili Bidhaa' },
+    qa_reports:         { en: 'Business Reports',              sw: 'Ripoti za Biashara' },
+    qa_alerts:          { en: 'Stock Alerts',                  sw: 'Tahadhari Stoo' },
+
+    // ── Dead Stock & Cashflow Intelligence ────────────────────────────────────
+    dash_dead_stock:    { en: 'Dormant Capital (Dead Stock)',  sw: 'Mtaji Uliolala Stoo' },
+    dash_dead_stock_sub:{ en: '{n} items unsold for 30+ days', sw: 'Bidhaa {n} hazijatembea siku 30+' },
+    dash_dead_action:   { en: 'Review Items',                  sw: 'Kagua Bidhaa' },
+    dash_net_cashflow:  { en: 'Net Cashflow Pulse',            sw: 'Mtiririko wa Fedha Mkononi' },
+    dash_cash_in:       { en: 'Cash In (Sales)',               sw: 'Fedha Kuingia (Mauzo)' },
+    dash_cash_out:      { en: 'Cash Out (Purchases)',          sw: 'Fedha Kutoka (Mzigo)' },
+    dash_net_today:     { en: 'Net Today',                     sw: 'Baki Leo' },
     // ── Alerts Hub KPI Cards ──────────────────────────────────────────────────
     alerts_total:       { en: 'Total Alerts',                  sw: 'Jumla ya Tahadhari' },
     alerts_out_stock:   { en: 'Out of Stock',                  sw: 'Zimekwisha Kabisa' },
