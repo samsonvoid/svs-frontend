@@ -407,42 +407,34 @@ const Settings = () => {
                                     )}
                                 </div>
 
-                                {/* Channel 2: SMS (Bongo Gateway) */}
-                                <div className="p-4 sm:p-5 rounded-2xl border border-blue-100 bg-blue-50/30 space-y-3">
-                                    <div className="flex items-center justify-between">
+                                {/* Channel 2: SMS (Coming Soon) */}
+                                <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-gray-50/60 space-y-3">
+                                    <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                            <div className="w-10 h-10 rounded-xl bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
                                                 <Smartphone className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-900 text-sm">SMS (Kawaida - Beem Gateway)</h4>
-                                                <p className="text-[11px] text-gray-500">Inafika hata kama simu haina bando la internet</p>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h4 className="font-bold text-gray-700 text-sm">SMS (Kawaida - Simu)</h4>
+                                                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">
+                                                        Inakuja Hivi Karibuni (Coming Soon)
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                                    Inahitaji SMS Gateway ya ndani (Beem Africa). Kwa sasa tumia WhatsApp na Email.
+                                                </p>
                                             </div>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={settings.notify_sms_enabled === '1'} 
-                                                onChange={e => setSettings({...settings, notify_sms_enabled: e.target.checked ? '1' : '0'})}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                        </label>
-                                    </div>
-                                    {settings.notify_sms_enabled === '1' && (
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
-                                                Namba ya Simu ya Kupokea SMS
-                                            </label>
-                                            <input 
-                                                type="text"
-                                                value={settings.notify_sms_number || ''}
-                                                onChange={e => setSettings({...settings, notify_sms_number: e.target.value})}
-                                                placeholder="mf. 0712345678 au 255712345678"
-                                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                            />
+                                        <div className="shrink-0">
+                                            <div 
+                                                title="Kipengele hiki kitawashwa hivi karibuni" 
+                                                className="w-11 h-6 bg-gray-200 rounded-full relative cursor-not-allowed opacity-60"
+                                            >
+                                                <div className="absolute top-[2px] left-[2px] bg-white rounded-full h-5 w-5 shadow-xs"></div>
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* Channel 3: Email */}
