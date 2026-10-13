@@ -144,6 +144,14 @@ export const translations = {
     dash_cash_in:       { en: 'Cash In (Sales)',               sw: 'Fedha Kuingia (Mauzo)' },
     dash_cash_out:      { en: 'Cash Out (Purchases)',          sw: 'Fedha Kutoka (Mzigo)' },
     dash_net_today:     { en: 'Net Today',                     sw: 'Baki Leo' },
+    dash_net_month:     { en: 'Net This Month',                sw: 'Baki Mwezi Huu' },
+
+    // ── Inventory Filters & Dormant KPI ───────────────────────────────────────
+    inv_filter_dormant: { en: 'Dormant Items (30+ Days)',      sw: 'Zilizolala (Siku 30+)' },
+    kpi_dormant_stock:  { en: 'Dormant Stock',                 sw: 'Mtaji Uliolala' },
+    kpi_dormant_stock_sub:{ en: '{n} items unsold 30d+',       sw: 'Bidhaa {n} hazijatembea' },
+    kpi_retail_value:   { en: 'Retail Value (Expected)',       sw: 'Thamani ya Kuuza (Retail)' },
+    kpi_expected_profit:{ en: 'Expected Profit',               sw: 'Faida Inayotarajiwa' },
     // ── Alerts Hub KPI Cards ──────────────────────────────────────────────────
     alerts_total:       { en: 'Total Alerts',                  sw: 'Jumla ya Tahadhari' },
     alerts_out_stock:   { en: 'Out of Stock',                  sw: 'Zimekwisha Kabisa' },

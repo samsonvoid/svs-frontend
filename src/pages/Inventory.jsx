@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter, Layers, Coins } from 'lucide-react';
+import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter, Layers, Coins, Hourglass } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,8 +10,9 @@ const Inventory = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState('');
-    const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
+    const [filterMode, setFilterMode] = useState(() => searchParams.get('filter') || 'all');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [showModal, setShowModal] = useState(false);
@@ -83,6 +85,15 @@ const Inventory = () => {
         }
     };
 
+    const thirtyDaysAgo = useMemo(() => new Date(Date.now() - 30 * 864e5), []);
+
+    const isDormantProduct = (p) => {
+        const qty = parseInt(p.stock_quantity) || 0;
+        if (qty <= 0) return false;
+        if (!p.sale_items_max_created_at) return true;
+        return new Date(p.sale_items_max_created_at) < thirtyDaysAgo;
+    };
+
     const lowStockCount = useMemo(() => {
         return products.filter(p => p.stock_quantity <= (p.min_stock ?? 5)).length;
     }, [products]);
@@ -90,11 +101,25 @@ const Inventory = () => {
     const inventoryStats = useMemo(() => {
         const totalProducts = products.length;
         const totalUnits = products.reduce((acc, p) => acc + (parseInt(p.stock_quantity) || 0), 0);
-        const totalValue = products.reduce((acc, p) => acc + ((parseInt(p.stock_quantity) || 0) * (parseFloat(p.buying_price) || 0)), 0);
+        const totalCostValue = products.reduce((acc, p) => acc + ((parseInt(p.stock_quantity) || 0) * (parseFloat(p.buying_price) || 0)), 0);
+        const totalRetailValue = products.reduce((acc, p) => acc + ((parseInt(p.stock_quantity) || 0) * (parseFloat(p.selling_price) || 0)), 0);
         const lowStock = products.filter(p => (parseInt(p.stock_quantity) || 0) <= (p.min_stock ?? 5)).length;
         const outOfStock = products.filter(p => (parseInt(p.stock_quantity) || 0) <= 0).length;
-        return { totalProducts, totalUnits, totalValue, lowStock, outOfStock };
-    }, [products]);
+        const dormantItems = products.filter(isDormantProduct);
+        const dormantCount = dormantItems.length;
+        const dormantValue = dormantItems.reduce((acc, p) => acc + ((parseInt(p.stock_quantity) || 0) * (parseFloat(p.buying_price) || 0)), 0);
+        return { 
+            totalProducts, 
+            totalUnits, 
+            totalCostValue,
+            totalValue: totalCostValue, 
+            totalRetailValue,
+            lowStock, 
+            outOfStock,
+            dormantCount,
+            dormantValue
+        };
+    }, [products, thirtyDaysAgo]);
 
     // ── ABC Analysis (Pareto) ────────────────────────────────────────────────
     // Rank products by total revenue generated (selling_price × qty_sold)
@@ -138,10 +163,15 @@ const Inventory = () => {
         return products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
                 p.sku.toLowerCase().includes(search.toLowerCase());
-            const matchesLowStock = filterLowStockOnly ? (p.stock_quantity <= (p.min_stock ?? 5)) : true;
-            return matchesSearch && matchesLowStock;
+            let matchesFilter = true;
+            if (filterMode === 'low') {
+                matchesFilter = (parseInt(p.stock_quantity) || 0) <= (p.min_stock ?? 5);
+            } else if (filterMode === 'dormant') {
+                matchesFilter = isDormantProduct(p);
+            }
+            return matchesSearch && matchesFilter;
         });
-    }, [products, search, filterLowStockOnly]);
+    }, [products, search, filterMode, thirtyDaysAgo]);
 
     const paginatedProducts = useMemo(() => {
         const start = (currentPage - 1) * pageSize;
@@ -204,36 +234,51 @@ const Inventory = () => {
                     </div>
                 </div>
 
-                {/* Card 3: Inventory Valuation */}
+                {/* Card 3: Total Money of Store (Cost vs Retail Valuation) */}
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
                     <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                         <Coins className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_inv_value')}</p>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_inv_value')} (Cost)</p>
                         <p className="text-sm sm:text-xl font-black text-emerald-600 mt-0.5 truncate">
-                            TZS {Math.round(inventoryStats.totalValue).toLocaleString()}
+                            TZS {Math.round(inventoryStats.totalCostValue).toLocaleString()}
                         </p>
-                        <p className="text-[10px] text-gray-400 font-medium">{t('kpi_inv_value_sub')}</p>
+                        <p className="text-[10px] text-gray-400 font-medium truncate">
+                            {t('kpi_retail_value')}: TZS {Math.round(inventoryStats.totalRetailValue).toLocaleString()}
+                        </p>
                     </div>
                 </div>
 
-                {/* Card 4: Low Stock Alert */}
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-shadow flex items-center gap-3.5">
+                {/* Card 4: Dormant Capital & Low Stock Alerts */}
+                <div 
+                    onClick={() => {
+                        const next = filterMode === 'dormant' ? 'all' : 'dormant';
+                        setFilterMode(next);
+                        setCurrentPage(1);
+                    }}
+                    title="Click to filter dormant items"
+                    className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border shadow-xs hover:shadow-md transition-all flex items-center gap-3.5 ${
+                        filterMode === 'dormant' ? 'border-amber-400 ring-2 ring-amber-400/20 bg-amber-50/20' : 'border-gray-100'
+                    }`}
+                >
                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                        inventoryStats.lowStock > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'
+                        inventoryStats.dormantCount > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'
                     }`}>
-                        <AlertTriangle className="w-5 h-5" />
+                        <Hourglass className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_low_stock')}</p>
-                        <p className={`text-lg sm:text-2xl font-black mt-0.5 ${inventoryStats.lowStock > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
-                            {inventoryStats.lowStock}
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider truncate">{t('kpi_dormant_stock')}</p>
+                            {inventoryStats.dormantCount > 0 && (
+                                <span className="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded uppercase">Slow</span>
+                            )}
+                        </div>
+                        <p className={`text-sm sm:text-xl font-black mt-0.5 truncate ${inventoryStats.dormantCount > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
+                            TZS {Math.round(inventoryStats.dormantValue).toLocaleString()}
                         </p>
                         <p className="text-[10px] text-gray-400 font-medium truncate">
-                            {inventoryStats.outOfStock > 0
-                                ? t('kpi_out_of_stock', { n: inventoryStats.outOfStock })
-                                : t('kpi_low_stock_sub')}
+                            {t('kpi_dormant_stock_sub', { n: inventoryStats.dormantCount })} · {inventoryStats.lowStock} Low
                         </p>
                     </div>
                 </div>
@@ -265,15 +310,16 @@ const Inventory = () => {
                 </div>
 
                 <select
-                    value={filterLowStockOnly ? 'low' : 'all'}
+                    value={filterMode}
                     onChange={e => {
-                        setFilterLowStockOnly(e.target.value === 'low');
+                        setFilterMode(e.target.value);
                         setCurrentPage(1);
                     }}
                     className="bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none shadow-xs cursor-pointer shrink-0"
                 >
-                    <option value="all">📦 All Products ({products.length})</option>
-                    <option value="low">⚠️ Low Stock ({lowStockCount})</option>
+                    <option value="all">📦 {t('inv_filter_all')} ({products.length})</option>
+                    <option value="low">⚠️ {t('inv_filter_low')} ({inventoryStats.lowStock})</option>
+                    <option value="dormant">💤 {t('inv_filter_dormant')} ({inventoryStats.dormantCount})</option>
                 </select>
             </div>
 
@@ -344,7 +390,14 @@ const Inventory = () => {
                                 return (
                                     <tr key={p.id} className="hover:bg-gray-50/60 transition-colors group">
                                         <td className="px-4 py-4">
-                                            <p className="font-bold text-gray-900 text-sm uppercase tracking-tight">{p.name}</p>
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <p className="font-bold text-gray-900 text-sm uppercase tracking-tight">{p.name}</p>
+                                                {isDormantProduct(p) && (
+                                                    <span className="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded-md uppercase tracking-wider">
+                                                        💤 30d+ Unsold
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-gray-400 font-mono mt-0.5">{p.sku}</p>
                                         </td>
                                         <td className="px-4 py-4">

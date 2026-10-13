@@ -216,7 +216,7 @@ const Dashboard = () => {
                         </div>
                         {isAdmin && (
                             <Link 
-                                to="/inventory" 
+                                to="/inventory?filter=dormant" 
                                 className="text-xs font-bold text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-all shrink-0 flex items-center gap-1"
                             >
                                 <span>{t('dash_dead_action')}</span>
