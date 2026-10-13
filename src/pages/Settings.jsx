@@ -30,6 +30,7 @@ const Settings = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [testingNotification, setTestingNotification] = useState(false);
+    const [showSmtp, setShowSmtp] = useState(false);
     const [toast, setToast] = useState(null);
 
     // Profile state
@@ -52,6 +53,13 @@ const Settings = () => {
         notify_whatsapp_number: '255626638099',
         notify_sms_enabled: '0',
         notify_sms_number: '',
+        // SMTP Server details
+        smtp_host: '',
+        smtp_port: '587',
+        smtp_username: '',
+        smtp_password: '',
+        smtp_encryption: 'tls',
+        notify_email_from: '',
         // Triggers
         alert_on_out_of_stock: '1',
         alert_on_low_stock: '1',
@@ -460,17 +468,85 @@ const Settings = () => {
                                         </label>
                                     </div>
                                     {settings.notify_email_enabled === '1' && (
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
-                                                Barua Pepe ya Mmiliki (Email)
-                                            </label>
-                                            <input 
-                                                type="email"
-                                                value={settings.notify_email_address || ''}
-                                                onChange={e => setSettings({...settings, notify_email_address: e.target.value})}
-                                                placeholder="mf. mmiliki@gmail.com"
-                                                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                                            />
+                                        <div className="space-y-3 pt-1">
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                                                    Barua Pepe ya Mmiliki (Email ya Kupokea)
+                                                </label>
+                                                <input 
+                                                    type="email"
+                                                    value={settings.notify_email_address || ''}
+                                                    onChange={e => setSettings({...settings, notify_email_address: e.target.value})}
+                                                    placeholder="mf. mmiliki@gmail.com"
+                                                    className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                                                />
+                                            </div>
+
+                                            {/* Expandable SMTP Server Details */}
+                                            <div className="pt-2 border-t border-purple-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowSmtp(!showSmtp)}
+                                                    className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1.5 transition-colors"
+                                                >
+                                                    <span>{showSmtp ? '▼ Funga' : '▶ Sanidi'} Seva ya Barua Pepe (SMTP / Gmail Server - Hiari)</span>
+                                                </button>
+
+                                                {showSmtp && (
+                                                    <div className="mt-3 p-3.5 bg-white rounded-xl border border-purple-100 space-y-3 animate-in fade-in">
+                                                        <p className="text-[11px] text-gray-500">
+                                                            Weka maelezo ya SMTP ya Gmail au akaunti ya barua pepe ya duka ili barua pepe zitumwe rasmi:
+                                                        </p>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SMTP Host</label>
+                                                                <input 
+                                                                    type="text"
+                                                                    value={settings.smtp_host || ''}
+                                                                    onChange={e => setSettings({...settings, smtp_host: e.target.value})}
+                                                                    placeholder="smtp.gmail.com"
+                                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-purple-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SMTP Port</label>
+                                                                <input 
+                                                                    type="text"
+                                                                    value={settings.smtp_port || '587'}
+                                                                    onChange={e => setSettings({...settings, smtp_port: e.target.value})}
+                                                                    placeholder="587"
+                                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-purple-500"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Username / Email</label>
+                                                                <input 
+                                                                    type="text"
+                                                                    value={settings.smtp_username || ''}
+                                                                    onChange={e => setSettings({...settings, smtp_username: e.target.value})}
+                                                                    placeholder="duka@gmail.com"
+                                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-purple-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Password / App Password</label>
+                                                                <input 
+                                                                    type="password"
+                                                                    value={settings.smtp_password || ''}
+                                                                    onChange={e => setSettings({...settings, smtp_password: e.target.value})}
+                                                                    placeholder="••••••••••••••••"
+                                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-purple-500"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-400 italic">
+                                                            💡 Kwa Gmail: Tumia "App Password" yenye tarakimu 16 kutoka Google Security settings.
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
