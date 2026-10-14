@@ -13,13 +13,14 @@ const Header = ({ toggleSidebar }) => {
         '/':           { titleKey: 'page_dashboard',  subKey: 'page_dashboard_sub' },
         '/alerts':     { titleKey: 'page_alerts',     subKey: 'page_alerts_sub' },
         '/inventory':  { titleKey: 'page_inventory',  subKey: 'page_inventory_sub' },
-        '/purchases':  { titleKey: 'page_purchases',  subKey: 'page_purchases_sub' },
-        '/suppliers':  { titleKey: 'page_suppliers',  subKey: 'page_suppliers_sub' },
-        '/sales':      { titleKey: 'page_sales',      subKey: 'page_sales_sub' },
-        '/reports':    { titleKey: 'page_reports',    subKey: 'page_reports_sub' },
-        '/stock-logs': { titleKey: 'page_logs',       subKey: 'page_logs_sub' },
-        '/categories': { titleKey: 'page_categories', subKey: 'page_categories_sub' },
-        '/settings':   { titleKey: 'page_settings',  subKey: 'page_settings_sub' },
+        '/purchases':   { titleKey: 'page_purchases',   subKey: 'page_purchases_sub' },
+        '/adjustments': { titleKey: 'page_adjustments', subKey: 'page_adjustments_sub' },
+        '/suppliers':   { titleKey: 'page_suppliers',   subKey: 'page_suppliers_sub' },
+        '/sales':       { titleKey: 'page_sales',       subKey: 'page_sales_sub' },
+        '/reports':     { titleKey: 'page_reports',     subKey: 'page_reports_sub' },
+        '/stock-logs':  { titleKey: 'page_logs',        subKey: 'page_logs_sub' },
+        '/categories':  { titleKey: 'page_categories',  subKey: 'page_categories_sub' },
+        '/settings':    { titleKey: 'page_settings',    subKey: 'page_settings_sub' },
     };
 
     const meta = PAGE_META[location.pathname];

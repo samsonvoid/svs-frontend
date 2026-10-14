@@ -17,7 +17,8 @@ import {
     BarChart3,
     Bell,
     Hourglass,
-    Wallet
+    Wallet,
+    SlidersHorizontal
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StatCard from '../components/dashboard/StatCard';
@@ -137,6 +138,15 @@ const Dashboard = () => {
                         >
                             <Plus className="w-4 h-4" />
                             <span>{t('qa_add_prod')}</span>
+                        </Link>
+                    )}
+                    {isAdmin && (
+                        <Link 
+                            to="/adjustments" 
+                            className="flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-rose-200/60 transition-all active:scale-95 shrink-0"
+                        >
+                            <SlidersHorizontal className="w-4 h-4" />
+                            <span>{t('qa_adjustments')}</span>
                         </Link>
                     )}
                     {isAdmin && (

@@ -12,7 +12,8 @@ import {
     PackagePlus,
     ClipboardList,
     Truck,
-    Bell
+    Bell,
+    SlidersHorizontal
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -80,6 +81,7 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
                     ]
                 },
                 { name: t('nav_purchases'), path: '/purchases', icon: PackagePlus, adminOnly: true },
+                { name: t('nav_adjustments'), path: '/adjustments', icon: SlidersHorizontal, adminOnly: true },
                 { name: t('nav_suppliers'), path: '/suppliers', icon: Truck, adminOnly: true },
                 { name: t('nav_logs'), path: '/stock-logs', icon: ClipboardList, adminOnly: true },
             ]
