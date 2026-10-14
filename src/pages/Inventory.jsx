@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Plus, Pencil, Trash2, Loader2, Search, AlertTriangle, CheckCircle, X, AlertCircle, Filter, Layers, Coins, Hourglass } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/common/Pagination';
 import { useLanguage } from '../context/LanguageContext';
@@ -53,16 +53,35 @@ const Inventory = () => {
         setShowModal(true);
     };
 
+    // Live duplicate detector: Warns if a product with similar name already exists in selected category
+    const matchedDuplicate = useMemo(() => {
+        if (editTarget || !form.category_id || !form.name || form.name.trim().length < 2) return null;
+        const query = form.name.trim().toLowerCase();
+        return products.find(p => 
+            p.category_id === form.category_id && 
+            p.name.toLowerCase().includes(query)
+        ) || null;
+    }, [products, form.category_id, form.name, editTarget]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         try {
+            const payload = {
+                name: form.name,
+                sku: form.sku,
+                category_id: form.category_id,
+                selling_price: parseFloat(form.selling_price) || 0,
+                unit: form.unit || 'Pcs',
+                min_stock: parseInt(form.min_stock) || 5,
+            };
+
             if (editTarget) {
-                await api.put(`/products/${editTarget.id}`, form);
+                await api.put(`/products/${editTarget.id}`, payload);
                 showToast('success', 'Product updated successfully.');
             } else {
-                await api.post('/products', form);
-                showToast('success', 'Product created successfully.');
+                await api.post('/products', payload);
+                showToast('success', 'Product created successfully with 0 initial stock.');
             }
             setShowModal(false);
             fetchData();
@@ -508,19 +527,65 @@ const Inventory = () => {
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* Step 1: Category selection FIRST */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+                                    1. Category (Kundi la Bidhaa) <span className="text-rose-500">*</span>
+                                </label>
+                                <select 
+                                    value={form.category_id} 
+                                    onChange={e => setForm({...form, category_id: e.target.value})} 
+                                    required 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                                >
+                                    <option value="">-- Chagua Kundi la Bidhaa --</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Step 2: Name Input with Live Duplicate Matcher */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+                                    2. Product Name (Jina la Bidhaa) <span className="text-rose-500">*</span>
+                                </label>
+                                <input 
+                                    value={form.name} 
+                                    onChange={e => setForm({...form, name: e.target.value})} 
+                                    required 
+                                    placeholder="e.g. Maji 1.5L au Rice 25kg" 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                                />
+
+                                {/* Smart Anti-Duplicate Banner */}
+                                {matchedDuplicate && !editTarget && (
+                                    <div className="mt-2.5 p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-start justify-between gap-3 text-xs text-amber-900 animate-in fade-in duration-200">
+                                        <div className="min-w-0">
+                                            <p className="font-bold flex items-center gap-1.5">
+                                                <span>⚠️</span> Bidhaa inayofanana tayari ipo: <strong>{matchedDuplicate.name}</strong>
+                                            </p>
+                                            <p className="text-[11px] text-amber-700 mt-0.5">
+                                                SKU: <span className="font-mono">{matchedDuplicate.sku}</span> • Stoo Iliyopo: <strong>{matchedDuplicate.stock_quantity} {matchedDuplicate.unit || 'units'}</strong>
+                                            </p>
+                                            <p className="text-[10px] text-amber-600 mt-1">
+                                                Je, unataka kuongeza idadi ya mzigo badala ya kusajili upya?
+                                            </p>
+                                        </div>
+                                        <Link 
+                                            to={`/purchases?product_id=${matchedDuplicate.id}`}
+                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl whitespace-nowrap text-xs shadow-xs transition-colors shrink-0"
+                                        >
+                                            Pokea Mzigo ➔
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Step 3: SKU & Unit */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Name</label>
-                                    <input 
-                                        value={form.name} 
-                                        onChange={e => setForm({...form, name: e.target.value})} 
-                                        required 
-                                        placeholder="e.g. Rice 25kg" 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">SKU</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                                        SKU / Barcode <span className="text-rose-500">*</span>
+                                    </label>
                                     <input 
                                         value={form.sku} 
                                         onChange={e => setForm({...form, sku: e.target.value})} 
@@ -529,46 +594,6 @@ const Inventory = () => {
                                         className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none" 
                                     />
                                 </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category</label>
-                                <select 
-                                    value={form.category_id} 
-                                    onChange={e => setForm({...form, category_id: e.target.value})} 
-                                    required 
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                >
-                                    <option value="">-- Select Category --</option>
-                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Buying Price (TZS)</label>
-                                    <input 
-                                        type="number" 
-                                        value={form.buying_price} 
-                                        onChange={e => setForm({...form, buying_price: e.target.value})} 
-                                        required 
-                                        min="0" 
-                                        step="0.01" 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Selling Price (TZS)</label>
-                                    <input 
-                                        type="number" 
-                                        value={form.selling_price} 
-                                        onChange={e => setForm({...form, selling_price: e.target.value})} 
-                                        required 
-                                        min="0" 
-                                        step="0.01" 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Unit (Kipimo)</label>
                                     <select 
@@ -587,15 +612,23 @@ const Inventory = () => {
                                         <option value="Kg">Kg (Kilo)</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Step 4: Selling Price & Min Stock Alert */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Stock Quantity</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                                        Selling Price (TZS) <span className="text-rose-500">*</span>
+                                    </label>
                                     <input 
                                         type="number" 
-                                        value={form.stock_quantity} 
-                                        onChange={e => setForm({...form, stock_quantity: e.target.value})} 
+                                        value={form.selling_price} 
+                                        onChange={e => setForm({...form, selling_price: e.target.value})} 
                                         required 
                                         min="0" 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        step="0.01" 
+                                        placeholder="e.g. 1500"
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-bold" 
                                     />
                                 </div>
                                 <div>
@@ -609,13 +642,37 @@ const Inventory = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Step 5: Stock Invariant Guard */}
+                            {!editTarget ? (
+                                <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex items-center justify-between text-xs text-blue-900">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                                        <span>Stoo ya Kuanzia: <strong>0 units</strong></span>
+                                    </div>
+                                    <span className="text-[11px] text-blue-600 font-medium">Kupokea mzigo, tumia <strong>Stock In</strong></span>
+                                </div>
+                            ) : (
+                                <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between text-xs">
+                                    <span className="text-gray-500">Stoo Iliyopo Sasa:</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-gray-900 px-2.5 py-1 bg-white border border-gray-200 rounded-lg">
+                                            {form.stock_quantity} units
+                                        </span>
+                                        <Link to="/adjustments" className="text-rose-600 hover:underline font-bold text-[11px] flex items-center gap-1">
+                                            Marekebisho ➔
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
                             <button 
                                 type="submit" 
                                 disabled={submitting} 
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-lg shadow-blue-500/20"
+                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-lg shadow-blue-500/20 cursor-pointer"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Box className="w-4 h-4" />}
-                                {submitting ? 'Saving...' : (editTarget ? 'Update Product' : 'Create Product')}
+                                {submitting ? 'Saving...' : (editTarget ? 'Update Product Details' : 'Register New Product (0 Stock)')}
                             </button>
                         </form>
                     </div>

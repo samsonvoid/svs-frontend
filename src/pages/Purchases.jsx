@@ -25,6 +25,7 @@ const Purchases = () => {
         product_id: '',
         quantity: '',
         purchase_price: '',
+        new_selling_price: '',
         supplier_id: '',
         supplier_name: '',
     });
@@ -48,7 +49,8 @@ const Purchases = () => {
                         setForm(prev => ({
                             ...prev,
                             product_id: matched.id,
-                            purchase_price: matched.buying_price || ''
+                            purchase_price: matched.buying_price || '',
+                            new_selling_price: matched.selling_price || ''
                         }));
                     }
                 }
@@ -62,8 +64,31 @@ const Purchases = () => {
     }, [queryProductId]);
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === 'product_id') {
+            const picked = products.find(p => p.id === value);
+            setForm(prev => ({
+                ...prev,
+                product_id: value,
+                purchase_price: picked ? picked.buying_price || '' : prev.purchase_price,
+                new_selling_price: picked ? picked.selling_price || '' : prev.new_selling_price,
+            }));
+            return;
+        }
+        setForm({ ...form, [name]: value });
     };
+
+    const selectedProduct = useMemo(() => {
+        return products.find(p => p.id === form.product_id) || null;
+    }, [products, form.product_id]);
+
+    const liveMargin = useMemo(() => {
+        const cost = parseFloat(form.purchase_price);
+        const sell = parseFloat(form.new_selling_price || selectedProduct?.selling_price);
+        if (!cost || !sell || sell <= 0) return null;
+        const marginPct = ((sell - cost) / sell) * 100;
+        return marginPct.toFixed(1);
+    }, [form.purchase_price, form.new_selling_price, selectedProduct]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -71,14 +96,22 @@ const Purchases = () => {
 
         setSubmitting(true);
         try {
-            const res = await api.post('/purchases', {
-                ...form,
+            const payload = {
+                product_id: form.product_id,
                 quantity: parseInt(form.quantity),
                 purchase_price: parseFloat(form.purchase_price),
-            });
+                supplier_id: form.supplier_id === '__other__' ? null : (form.supplier_id || null),
+                supplier_name: form.supplier_name || null,
+            };
+
+            if (form.new_selling_price && parseFloat(form.new_selling_price) > 0) {
+                payload.new_selling_price = parseFloat(form.new_selling_price);
+            }
+
+            const res = await api.post('/purchases', payload);
 
             setToast({ type: 'success', message: `✅ ${res.data.message} New stock: ${res.data.new_stock_level}` });
-            setForm({ product_id: '', quantity: '', purchase_price: '', supplier_id: '', supplier_name: '' });
+            setForm({ product_id: '', quantity: '', purchase_price: '', new_selling_price: '', supplier_id: '', supplier_name: '' });
 
             // Refresh history and product list
             const [prodRes, historyRes] = await Promise.all([
@@ -277,10 +310,51 @@ const Purchases = () => {
                                         step="0.01"
                                         required
                                         placeholder="e.g. 4500"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 sm:py-3 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 sm:py-3 px-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold"
                                     />
                                 </div>
                             </div>
+
+                            {/* Optional Selling Price Update & Live Margin Pulse */}
+                            {selectedProduct && (
+                                <div className="p-3.5 bg-blue-50/60 border border-blue-200/70 rounded-2xl space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-600">Bei ya Sasa ya Kuuzia:</span>
+                                        <span className="font-bold text-gray-900">TZS {Number(selectedProduct.selling_price || 0).toLocaleString()}</span>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                                        <div className="flex-1 w-full">
+                                            <label className="block text-[11px] font-bold text-blue-900 uppercase tracking-wider mb-1">
+                                                Sasisha Bei ya Kuuzia (Hiari)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="new_selling_price"
+                                                value={form.new_selling_price}
+                                                onChange={handleChange}
+                                                min="0"
+                                                step="0.01"
+                                                placeholder={`Default: ${selectedProduct.selling_price}`}
+                                                className="w-full bg-white border border-blue-200 rounded-xl py-2 px-3 text-xs sm:text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                        </div>
+
+                                        {liveMargin && (
+                                            <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-1 sm:pt-4">
+                                                <span className="text-[10px] text-gray-500 uppercase font-bold">Faida (Margin):</span>
+                                                <span className={`text-xs font-black px-2.5 py-0.5 rounded-lg ${
+                                                    parseFloat(liveMargin) > 20 
+                                                        ? 'bg-emerald-100 text-emerald-800' 
+                                                        : 'bg-amber-100 text-amber-800'
+                                                }`}>
+                                                    {liveMargin}% Margin
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Supplier (Msambazaji)</label>
